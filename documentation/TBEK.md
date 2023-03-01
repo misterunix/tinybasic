@@ -111,19 +111,7 @@ Gee, you say, if it weren't for that last caveat, I could use the same technique
 
 ### ARRAYS
 
-      So the question arises, can the USR function help get around
-the fact that **TINY BASIC** does not have arrays?  The answer is of
-course, yes.  Obviously the small amount of space left in Page 00
-and elsewhere in your system after TINY has made its memory grab is
-not enough to do anything useful.  The possibility that one of the
-numbers might take on the value 13 means that you cannot use the
-program space.  What else is there?  Remember the memory bounds in
-0020-0023 hex.  If you start TINY with the Warm Start (S+3), you can
-put any memory limits you wish in here, and TINY will stay out of
-the rest of memory.  Now you have room for array data, subroutines,
-or anything else.  You can let the variable A hold the starting
-address of an array, and N the number of elements, and a bubble sort
-would look like this:
+So the question arises, can the USR function help get around the fact that **TINY BASIC** does not have arrays?  The answer is of course, yes.  Obviously the small amount of space left in Page 00 and elsewhere in your system after TINY has made its memory grab is not enough to do anything useful.  The possibility that one of the numbers might take on the value 13 means that you cannot use the program space.  What else is there?  Remember the memory bounds in 0020-0023 hex.  If you start TINY with the Warm Start (S+3), you can put any memory limits you wish in here, and TINY will stay out of the rest of memory.  Now you have room for array data, subroutines, or anything else.  You can let the variable A hold the starting address of an array, and N the number of elements, and a bubble sort would look like this:
 
       500 LET I=1
       510 LET K=0
@@ -135,60 +123,26 @@ would look like this:
       560 IF K<>0 GOTO 500
       570 END
 
-Of course this not the most efficient sort routine and it will be
-veerrry slow. But it is probably faster than writing one in machine
-language, even though the machine language version would execute
-faster.
+Of course this not the most efficient sort routine and it will be veerrry slow. But it is probably faster than writing one in machine language, even though the machine language version would execute faster.
 
-THE STACK
-      A kind of sneaky place to store data is in the GOSUB stack.
-There are two ways to do this without messing with the Warm Start.
-But first let us think about the rationale.
-      When you execute a GOSUB, the line number of the GOSUB is
-saved on a stack which grows downward from the end of the user
-space.  Each GOSUB makes the stack grow by two bytes, and each
-RETURN pops off the most recent saved address, to shrink the stack
-by two bytes.  Incidentally, because the line number is saved and
-not the physical location in memory, you do not need to worry about
-making changes to your program in case of an error stop within a
-subroutine.  Just don't remove the line that contains an unRETURNed
-subroutine (unless you are willing to put up with TINY's
-complaints).
-      The average program seldom needs to nest subroutines (i.e.
-calling subroutines from within subroutines) more than five or ten
-levels deep, and many computer systems are designed with a built-in
-limitation on the number of subroutines that may be nested.  The
-8008 CPU was limited to eight levels.  The 6502 is limited to about
-120.  Many BASIC interpreters specify some maximum.  I tend to feel
-that stack space, like most other resources, obeys Parkinson's Law:
-The requirements will expand to exhaust the available resources.
-Accordingly, the **TINY BASIC** subroutine nest capacity is limited only
-by the amount of available memory.  This is an important concept.
-If my program is small (the program and the stack contend for the
-same memory space), I can execute hundreds or even thousands of
+### THE STACK
 
-                                 5
+A kind of sneaky place to store data is in the GOSUB stack. There are two ways to do this without messing with the Warm Start. But first let us think about the rationale.
 
-GOSUBs before the stack fills up.  If there are no corresponding
-RETURN statements, all that memory just sits there doing nothing.
-      If you read your User's Manual carefully you will recall that
-memory locations 0026-0027 (hex) point to the top of the GOSUB
-stack.  Actually they point to the next byte not yet used.  The
-difference between that address and the end of memory (found in
-0022-0023 hex) is exactly the number of bytes in the stack.  One
-greater than the value of the top-of-stack pointer is the address of
-the first byte in the stack.
-      If you know how many bytes of data space you need, the first
-thing your program can do is execute half that many GOSUBs:
+When you execute a GOSUB, the line number of the GOSUB is saved on a stack which grows downward from the end of the user space.  Each GOSUB makes the stack grow by two bytes, and each RETURN pops off the most recent saved address, to shrink the stack by two bytes.  Incidentally, because the line number is saved and not the physical location in memory, you do not need to worry about making changes to your program in case of an error stop within a subroutine.  Just don't remove the line that contains an unRETURNed subroutine (unless you are willing to put up with TINY's complaints).
+
+The average program seldom needs to nest subroutines (i.e. calling subroutines from within subroutines) more than five or ten levels deep, and many computer systems are designed with a built-in limitation on the number of subroutines that may be nested.  The 8008 CPU was limited to eight levels.  The 6502 is limited to about 120.  Many BASIC interpreters specify some maximum.  I tend to feel that stack space, like most other resources, obeys Parkinson's Law: The requirements will expand to exhaust the available resources. Accordingly, the **TINY BASIC** subroutine nest capacity is limited only by the amount of available memory.  This is an important concept. If my program is small (the program and the stack contend for the same memory space), I can execute hundreds or even thousands of GOSUBs before the stack fills up.  If there are no corresponding RETURN statements, all that memory just sits there doing nothing.
+      
+If you read your User's Manual carefully you will recall that memory locations 0026-0027 (hex) point to the top of the GOSUB stack.  Actually they point to the next byte not yet used.  The difference between that address and the end of memory (found in 0022-0023 hex) is exactly the number of bytes in the stack.  One greater than the value of the top-of-stack pointer is the address of the first byte in the stack.
+      
+If you know how many bytes of data space you need, the first thing your program can do is execute half that many GOSUBs:
 
       400 REM B IS THE NUMBER OF BYTES NEEDED
       410 LET B=B-2
       420 IF B> -2 THEN GOSUB 410
       430 REM SIMPLE, ISN'T IT?
 
-Be careful that you do not try to call this as a subroutine, because
-the return address will be buried under several hundred "420"s.  If
-you were to add the line,
+Be careful that you do not try to call this as a subroutine, because the return address will be buried under several hundred "420"s.  If you were to add the line,
 
       440 RETURN
 
@@ -198,25 +152,12 @@ stack is cleared, but an error stop or a Break will not affect it.
 Before you start this program you should be sure the stack is clear
 by typing "END"; otherwise, a few times through the GOSUB loop and
 you will run out of memory.
-      If you are careful to limit it to the main program, you can
-grab bytes out of the stack as the need arises.  An example of this
-is the TBIL Assembler included in this document.  Whether you
-allocate the memory with one big grab, or a little at a time, you
-may use the USR peek and poke functions to get at it.
 
-      The other way to use the stack for storing data is a little
-more prodigal of memory, but it runs faster.  It also has the
-advantage of avoiding the USR function, in case that still scares
-you.  It works by effectively encoding the data in the return
-address line numbers themselves.  The data is accessed in true stack
-format: last in, first out.  I used this technique successfully in
-implementing a recursive program in **TINY BASIC**.
-      This method works best with the computed GOTO techniques
-described later, but the following example will illustrate the
-principle:  Assume that the variable Q may take on the values (-1,
-0, +1), and it is desired to stack Q for later use.  Where this
-requirement occurs, use a GOTO (not a GOSUB!) to jump to the
-following subroutine:
+If you are careful to limit it to the main program, you can grab bytes out of the stack as the need arises.  An example of this is the TBIL Assembler included in this document.  Whether you allocate the memory with one big grab, or a little at a time, you may use the USR peek and poke functions to get at it.
+
+The other way to use the stack for storing data is a little more prodigal of memory, but it runs faster.  It also has the advantage of avoiding the USR function, in case that still scares you.  It works by effectively encoding the data in the return address line numbers themselves.  The data is accessed in true stack format: last in, first out.  I used this technique successfully in implementing a recursive program in **TINY BASIC**.
+
+This method works best with the computed GOTO techniques described later, but the following example will illustrate the principle:  Assume that the variable Q may take on the values (-1,0, +1), and it is desired to stack Q for later use.  Where this requirement occurs, use a GOTO (not a GOSUB!) to jump to the following subroutine:
 
       3000 REM SAVE Q ON STACK
       3010 IF Q<0 THEN GOTO 3100
@@ -225,9 +166,6 @@ following subroutine:
       3060 GOSUB 3200
       3070 REM RECOVER Q
       3080 LET Q=0
-
-                                 6
-
       3090 GOTO 3220
       3100 REM Q<0, SAVE IT.
       3110 GOSUB 3200
@@ -244,21 +182,9 @@ following subroutine:
       3220 REM EXIT TO (RECOVER) CALLER
       3230 GOTO ...
 
-When the main program wishes to save Q, it jumps to the entry (line
-3000), which selects one of three GOSUBs.  These all converge on
-line 3200, which simply jumps back to the calling routine; the
-information in Q has been saved on the stack.  To recover the saved
-value of Q it is necessary only to execute a RETURN.  Depending on
-which GOSUB was previously selected, execution returns to the next
-line, which sets Q to the appropriate value, then jumps back to the
-calling routine (with a GOTO again!).  Q may be resaved as many
-times as you like (and as you have memory for) without recovering
-the previous values.  When you finally do execute a RETURN you get
-the most recently saved value of Q.
-      For larger numbers, the GOSUBs may be nested, each saving one
-bit (or digit) of the number.  The following routine saves arbitrary
-numbers, but in the worst case requires 36 bytes of stack for each
-number (for numbers less than -16383):
+When the main program wishes to save Q, it jumps to the entry (line 3000), which selects one of three GOSUBs.  These all converge on line 3200, which simply jumps back to the calling routine; the information in Q has been saved on the stack.  To recover the saved value of Q it is necessary only to execute a RETURN.  Depending on which GOSUB was previously selected, execution returns to the next line, which sets Q to the appropriate value, then jumps back to the calling routine (with a GOTO again!).  Q may be resaved as many times as you like (and as you have memory for) without recovering the previous values.  When you finally do execute a RETURN you get the most recently saved value of Q.
+      
+For larger numbers, the GOSUBs may be nested, each saving one bit (or digit) of the number.  The following routine saves arbitrary numbers, but in the worst case requires 36 bytes of stack for each number (for numbers less than -16383):
 
       1470 REM SAVE A VALUE FROM V
       1480 IF V>=0 THEN GOTO 1490
@@ -278,50 +204,19 @@ number (for numbers less than -16383):
       1524 GOTO 1490
       1550 REM GO ON TO USE V FOR OTHER THINGS
 
-Note that this subroutine is designed to be placed in the path
-between the calling routine and some subroutine which re-uses the
-variable V.  When the subroutine returns, it returns through the
-restoration part of this routine, which eventually returns to the
-main program with V restored.  The subroutine which starts at line
-1550 is assumed to be recursive, and it may call on itself through
+Note that this subroutine is designed to be placed in the path between the calling routine and some subroutine which re-uses the variable V.  When the subroutine returns, it returns through the restoration part of this routine, which eventually returns to the main program with V restored.  The subroutine which starts at line 1550 is assumed to be recursive, and it may call on itself through this save routine, so that any number of instances of V may be saved on the stack.  The only requirement is that to return, it first set V to 0, so that the restoration routine will function correctly. Alternatively, we could change line 1550 to jump to the subroutine start with a GOSUB:
 
-                                 7
+      1550 GOSUB ...
+      1552 LET V=0
+      1554 RETURN
 
-this save routine, so that any number of instances of V may be saved
-on the stack.  The only requirement is that to return, it first set
-V to 0, so that the restoration routine will function correctly.
-Alternatively, we could change line 1550 to jump to the subroutine
-start with a GOSUB:
+This requires another two bytes on the stack but it removes the restriction on the exit from the recursive subroutine.
+      
+If you expect to put a hundred or more numbers on the stack in this way you might wish to consider packing them more tightly.  If you use ten GOSUBs and divide by 10 instead of 2, the numbers will take one third the stack space.  Divide by 41 and any number will fit in three GOSUBs, but the program gets rather long.
 
-1550 GOSUB ...
-1552 LET V=0
-1554 RETURN
+### BIGGER NUMBERS
 
-This requires another two bytes on the stack but it removes the
-restriction on the exit from the recursive subroutine.
-      If you expect to put a hundred or more numbers on the stack in
-this way you might wish to consider packing them more tightly.  If
-you use ten GOSUBs and divide by 10 instead of 2, the numbers will
-take one third the stack space.  Divide by 41 and any number will fit
-in three GOSUBs, but the program gets rather long.
-
-BIGGER NUMBERS
-      Sixteen bits is only good for integers 0-65535 or
-(-32768)-(+32767).  This is fine for games and control applications,
-but sometimes we would like to handle fractional numbers (like
-dollars and cents), or very large range numbers as in scientific
-notation.  Let's face it: Regular BASIC has spoiled us.  Granted.
-But if you could balance your checkbook in **TINY BASIC**, your wife
-might complain less about the hundreds of dollars you spent on the
-computer.  One common way to handle dollars and cents is to treat it
-as an integer number of cents.  That would be OK if your balance
-never went over $327.67, but that seems a little unreasonable.
-Instead, break it up into two numbers, one for the dollars, the
-other for cents.  Now your balance can go up to $32,767.99, which is
-good enough for now (if your balance goes over that you probably
-don't balance your own checkbook anyway).  We will keep the dollars
-part of the balance in D and the cents in C.  The following routine
-could be used to print your balance:
+Sixteen bits is only good for integers 0-65535 or (-32768)-(+32767).  This is fine for games and control applications, but sometimes we would like to handle fractional numbers (like dollars and cents), or very large range numbers as in scientific notation.  Let's face it: Regular BASIC has spoiled us.  Granted. But if you could balance your checkbook in **TINY BASIC**, your wife might complain less about the hundreds of dollars you spent on the computer.  One common way to handle dollars and cents is to treat it as an integer number of cents.  That would be OK if your balance never went over $327.67, but that seems a little unreasonable. Instead, break it up into two numbers, one for the dollars, the other for cents.  Now your balance can go up to $32,767.99, which is good enough for now (if your balance goes over that you probably don't balance your own checkbook anyway).  We will keep the dollars part of the balance in D and the cents in C.  The following routine could be used to print your balance:
 
       900 REM PRINT DOLLARS & CENTS
       910 IF D+C<0 GOTO 960
@@ -334,23 +229,11 @@ could be used to print your balance:
       980 PRINT -C
       990 RETURN
 
-If line number 930 is omitted, then the balance of $62.03 would
-print as "$62.3".
-      Reading in the dollars and cents is easy if you require that
-the operator type a comma instead of a period for a decimal point
-(the European tradition).  If that is unacceptable, you can input
-the dollars part, then increment the input line buffer pointer
-(memory location 002E-002F hex) by one to skip over the period, then
-input the cents part.  Be careful that it was not the carriage
-return you incremented over.  The USR function and the peek and poke
+If line number 930 is omitted, then the balance of $62.03 would print as "$62.3".
 
-                                 8
+Reading in the dollars and cents is easy if you require that the operator type a comma instead of a period for a decimal point (the European tradition).  If that is unacceptable, you can input the dollars part, then increment the input line buffer pointer (memory location 002E-002F hex) by one to skip over the period, then input the cents part.  Be careful that it was not the carriage return you incremented over.  The USR function and the peek and poke subroutines will do all these things nicely.
 
-subroutines will do all these things nicely.
-      Adding and subtracting two-part numbers is not very difficult.
-Assume that the check amount has been input to X (dollars) and Y
-(cents).  This routine will subtract the check amount from the
-balance:
+Adding and subtracting two-part numbers is not very difficult. Assume that the check amount has been input to X (dollars) and Y (cents).  This routine will subtract the check amount from the balance:
 
       700 REM SUBTRACT DOLLARS AND CENTS FROM BALANCE
       710 C=C-Y
@@ -364,18 +247,9 @@ balance:
       790 C=C-100
       800 RETURN
 
-Adding is a little easier because you cannot go negative (except for
-overflow), so it is only necessary to check for C>99; if it is,
-subtract 100 and add 1 to D.  If your dollars and cents are in
-proper form (i.e. no cents values over 99), the sum will never
-exceed 198, so it is not necessary to retest after adjustment.
-      Using this same technique you can of course handle numbers
-with as many digits as you like, putting up to four digits in each
-piece.  A similar technique may be used to do floating point
-arithmetic.  The exponent part is held in one variable, say E, and
-the fractional part is held in one or more additional variables; in
-the following example we will use a four-digit fractional part in M,
-adding to it a number in F and N:
+Adding is a little easier because you cannot go negative (except for overflow), so it is only necessary to check for C>99; if it is, subtract 100 and add 1 to D.  If your dollars and cents are in proper form (i.e. no cents values over 99), the sum will never exceed 198, so it is not necessary to retest after adjustment.
+      
+Using this same technique you can of course handle numbers with as many digits as you like, putting up to four digits in each piece.  A similar technique may be used to do floating point arithmetic.  The exponent part is held in one variable, say E, and the fractional part is held in one or more additional variables; in the following example we will use a four-digit fractional part in M, adding to it a number in F and N:
 
       1000 REM FLOATING POINT ADD FOR **TINY BASIC**
       1010 IF E-4>F THEN RETURN
@@ -405,19 +279,11 @@ adding to it a number in F and N:
       1250 RETURN
                                  9
 
-This subroutine is a decimal floating point routine; by changing the
-divisors and multipliers appropriately, it can be made into a
-binary, hexadecimal, or even ternary floating point machine.  By
-using the multiple precision techniques described in the checkbook
-balance example, greater precision can be obtained in the fractional
-part.
+This subroutine is a decimal floating point routine; by changing the divisors and multipliers appropriately, it can be made into a binary, hexadecimal, or even ternary floating point machine.  By using the multiple precision techniques described in the checkbook balance example, greater precision can be obtained in the fractional part.
 
-COMPUTED GOTO
+### COMPUTED GOTO
 
-      One of the more powerful features of **TINY BASIC** is the
-computed line address for GOTO and G0SUB statements.  A recently
-published[2] set of games to run in TINY had several large blocks of
-the program devoted to sequences of IF statements of the form:
+One of the more powerful features of **TINY BASIC** is the computed line address for GOTO and G0SUB statements.  A recently published[2] set of games to run in TINY had several large blocks of the program devoted to sequences of IF statements of the form:
 
       110 IF I=1 GOTO 1000
       120 IF I=2 GOTO 2000
@@ -425,23 +291,13 @@ the program devoted to sequences of IF statements of the form:
       140 IF I=4 GOTO 4000
       150 GOTO 100
 
-Now there is nothing wrong with this form of program, but I'm too
-lazy to type all that, and besides, I could not get the whole
-program into my memory.  Instead of lines 110-140 above, the single
-line
+Now there is nothing wrong with this form of program, but I'm too lazy to type all that, and besides, I could not get the whole program into my memory.  Instead of lines 110-140 above, the single line
 
       125 IF I>0 IF I<5 GOTO I*1000
 
 does exactly the same thing in less memory, and probably faster.
-      Another part of this program simulated a card game, in which
-the internal numbers 11-14 were recognized (using the same kind of
-sequence of IFs) in three different places, and for each different
-number the name of the corresponding face card was printed.  The
-astonishing thing was that the sequence of IFs, PRINTs, and GOTOs
-was repeated three different places in the program.  Now I'm glad
-that Carl enjoys using **TINY BASIC**, and that he likes to type in
-large programs to fill his voluminous memory; but as I said I'm
-lazy, and I would rather type in one set of subroutines:
+
+Another part of this program simulated a card game, in which the internal numbers 11-14 were recognized (using the same kind of sequence of IFs) in three different places, and for each different number the name of the corresponding face card was printed.  The astonishing thing was that the sequence of IFs, PRINTs, and GOTOs was repeated three different places in the program.  Now I'm glad that Carl enjoys using **TINY BASIC**, and that he likes to type in large programs to fill his voluminous memory; but as I said I'm lazy, and I would rather type in one set of subroutines:
 
       10110 PRINT "JACK"
       10115 RETURN
@@ -452,106 +308,54 @@ lazy, and I would rather type in one set of subroutines:
       10140 PRINT "ACE"
       10145 RETURN
 
-Then in each of the three places where this is to be printed, use
-the simple formula,
+Then in each of the three places where this is to be printed, use the simple formula,
 
       2510 GOSUB 10000+B*10
 
-      Along the same line, when memory gets tight you may be able to
-save a few bytes with a similar technique.  Suppose your program has
-thirteen "GO TO 1234" statements in it; if you have an unused
-variable (say, U) you can, in the direct execution mode, assign it
-the value 1234 (i.e. the line number that all those GOTOs go to).
+Along the same line, when memory gets tight you may be able to save a few bytes with a similar technique.  Suppose your program has thirteen "GO TO 1234" statements in it; if you have an unused variable (say, U) you can, in the direct execution mode, assign it the value 1234 (i.e. the line number that all those GOTOs go to). Then replace each "GO TO 1234" with a "GOTOU" squeezing out the extra spaces (**TINY BASIC** ignores them anyway).  This will save some thirty or forty bytes, and it will probably run faster also.
 
-                                10
+### EXECUTION SPEED
 
-Then replace each "GO TO 1234" with a "GOTOU" squeezing out the
-extra spaces (**TINY BASIC** ignores them anyway).  This will save some
-thirty or forty bytes, and it will probably run faster also.
-
-EXECUTION SPEED
-      **TINY BASIC** is actually quite slow in running programs.  That
-is one of the hazards of a two-level interpreter approach to a
-language processor.  But there are some ways to affect the execution
-speed.  One of these is to use the keyword "LET" in your assignment
-statements.  **TINY BASIC** will accept either of the following two
-forms of the assignment statement and do the same thing,
+**TINY BASIC** is actually quite slow in running programs.  That is one of the hazards of a two-level interpreter approach to a language processor.  But there are some ways to affect the execution speed.  One of these is to use the keyword "LET" in your assignment statements.  **TINY BASIC** will accept either of the following two forms of the assignment statement and do the same thing,
 
       R=2+3
       LET R=2+3
 
-but the second form will execute much faster because it is
-unnecessary for the interpreter to first ascertain that it is not a
-REM, RUN, or RETURN statement.  In fact, the LET keyword is the
-first tested, so that it becomes the fastest-executing statement,
-whereas the other form must be tested against all twelve keywords
-before it is assumed to be an assignment statement.
-      Another way to speed up program execution depends on the fact
-that constant numbers are converted to binary each time they are
-used, while variables are fetched and used directly with no
-conversion.  If you use the same constant over and over and you do
-not otherwise use all the variables, assigning that number to one of
-the spare variables will make the program both shorter and faster.
-You can even make the assignment in an unnumbered line; the
-variables keep their values until explicitly changed.
-      Finally it should be noted that GOTOs and GOSUBs always search
-the program from the beginning for their respective line numbers.
-Put the speed-sensitive part of the program near the front, and the
-infrequently used routines (setup, error messages, and the like) at
-the end.  This way the GOTOs have fewer line numbers to wade through
-so they will run faster.
+but the second form will execute much faster because it is unnecessary for the interpreter to first ascertain that it is not a REM, RUN, or RETURN statement.  In fact, the LET keyword is the first tested, so that it becomes the fastest-executing statement, whereas the other form must be tested against all twelve keywords before it is assumed to be an assignment statement.
 
-DEBUGGING
-      Very few programs run perfectly the first time.  When your
-program does not seem to run right there are several steps you can
-take to find the problem.
-      First of all, try to break it up into its component parts.
-Use the GOTO command and the END statement to test each part
-separately if you can.  Add extra PRINT statements along the way to
-print out the variables you are using; sometimes the variables do
-not have the values in them that we expected.  Also, the PRINT
-statements will give you an idea as to the flow of execution.  For
-example, in testing the sort program above (lines 500-570) I
-inserted the following extra PRINT statements:
+Another way to speed up program execution depends on the fact that constant numbers are converted to binary each time they are used, while variables are fetched and used directly with no conversion.  If you use the same constant over and over and you do not otherwise use all the variables, assigning that number to one of the spare variables will make the program both shorter and faster. You can even make the assignment in an unnumbered line; the variables keep their values until explicitly changed.
+
+Finally it should be noted that GOTOs and GOSUBs always search the program from the beginning for their respective line numbers. Put the speed-sensitive part of the program near the front, and the infrequently used routines (setup, error messages, and the like) at the end.  This way the GOTOs have fewer line numbers to wade through so they will run faster.
+
+### DEBUGGING
+
+Very few programs run perfectly the first time.  When your program does not seem to run right there are several steps you can take to find the problem.
+      
+First of all, try to break it up into its component parts. Use the GOTO command and the END statement to test each part separately if you can.  Add extra PRINT statements along the way to print out the variables you are using; sometimes the variables do not have the values in them that we expected.  Also, the PRINT statements will give you an idea as to the flow of execution.  For example, in testing the sort program above (lines 500-570) I inserted the following extra PRINT statements:
 
       525 PR "X";
       545 PR ".";
       555 PR
 
-This gave me an idea where in the sort algorithm I was, so I could
-follow the exchanges (the "X"s), where each line represented one
-pass through the main loop.  Endless loops become more obvious this
-way.
-                                11
+This gave me an idea where in the sort algorithm I was, so I could follow the exchanges (the "X"s), where each line represented one pass through the main loop.  Endless loops become more obvious this way.
 
-      If you have not used all the sequential line numbers, you can
-insert breakpoints in the program in the form of a line number with
-an illegal statement -- I like to use a single period, because it
-is easy to type and does not take much space:
+If you have not used all the sequential line numbers, you can insert breakpoints in the program in the form of a line number with an illegal statement -- I like to use a single period, because it is easy to type and does not take much space:
 
       10 LET A=B+1234
       11 .
       20 GOSUB 100+A
 
-Here when you type RUN, the program will stop with the error
-message,
+Here when you type RUN, the program will stop with the error message,
 
       !184 AT 11
 
-Now we can PRINT A, B, etc. to see what might be wrong, or type in
-GOTO 20 to resume, with no loss to the original program.
-      As we have seen, there is not much that **TINY BASIC** cannot do
-(except maybe go fast).  Sure, it is somewhat of a nuisance to write
-all that extra code to get bigger numbers or strings or arrays, but
-you can always code up subroutines which can be used in several
-different programs (like the floating point add above (lines
-1000-1250), then save them, off on paper tape or cassette.
-      Remember, your computer (with **TINY BASIC** in it) is limited
-only by your imagination.
+Now we can PRINT A, B, etc. to see what might be wrong, or type in GOTO 20 to resume, with no loss to the original program.
+      
+As we have seen, there is not much that **TINY BASIC** cannot do (except maybe go fast).  Sure, it is somewhat of a nuisance to write all that extra code to get bigger numbers or strings or arrays, but you can always code up subroutines which can be used in several different programs (like the floating point add above (lines 1000-1250), then save them, off on paper tape or cassette.
+      
+Remember, your computer (with **TINY BASIC** in it) is limited only by your imagination.
 
-
-
-REFERENCES
+### REFERENCES
 
 [1] **TINY BASIC** User's Manual.  Available from ITTY BITTY COMPUTERS,
 P.O. Box 23189, San Jose, CA 95153.
@@ -560,1208 +364,6 @@ P.O. Box 23189, San Jose, CA 95153.
 Box 310, Menlo Park, CA 94025.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                12
-
-
-
-
-
-
-              TBIL -- The **TINY BASIC** Interpreter Language
-
-
-
-
-
-      The **TINY BASIC** interpreter is, in the words of Dennis Allison
-who conceived it, something like an onion.  There is an inner machine
-language program (ML) which interprets a second program written in
-an intermediate language (IL), which in turn interprets the BASIC
-program, and so on.  This document describes that intermediate
-language and the virtual machine which executes it.
-      The IL interpreter is a pure interpreter in the sense that the
-entire BASIC interpreter is implemented within the bounds of the
-language.  There are no deus ex machina escapes to machine language
-other than the well-defined machine-language subroutine call. The
-language is substantially the same as that defined by Dennis Allison
-in Dr. Dobb's Journal and PCC.
-      Most of the instructions in the IL occupy one byte of code. A
-few instructions may be followed by one or more bytes of immediate
-data and there are two jump instructions which are actually two
-bytes in length.
-      The interpreter itself uses no variable storage. Computations
-are performed on an expression stack, so that all procedures are
-capable of recursion. The interpreter does have access to memory
-Page 00 for data storage, but little use is made of this
-capability.
-      The IL code is self-relative. That is, all jumps are relative
-to the beginning of the IL interpreter. Thus the code can be moved
-to another part of memory without re-assembling it. The conditional
-branches are PC-relative and branch only forward to a maximum
-displacement of 31 bytes. An unconditional branch has a range of 31
-bytes forward or backwards.  Since the interpreter is generally
-quite small this is not a serious limitation. There are only two or
-three places where a longer conditional branch would be needed;
-these are accommodated by branching to a jump. The jumps have an
-address space of 11 bits, or 2K bytes from the beginning of the IL
-code.
-      Two of the instructions include a literal text string as part
-of the code. This string follows the opcode and is of arbitrary
-length. The end of the string is signaled by the eighth bit on the
-last byte being set to one. Since the text is generally assumed to
-be ASCII, a 7-bit code, this is a reasonable way to save space.
-
-      There are two stacks in the virtual machine. The computational
-or Expression Stack has already been mentioned. The other stack is a
-control stack, used to hold subroutine return addresses. The same
-control stack is used for subroutine returns in three languages:
-BASIC, IL, and ML. Thus a certain amount of care is necessary in the
-maintenance of this stack. The ML interpreter will take care of its
-
-
-                                13
-
-requirements by placing them on the stack top, and a special
-parameter ("SPARE") in the main program defines the maximum amount
-of space to be left on the stack for this purpose. Overflow of this
-part of the stack is not detectable, so it is essential that the
-reserved space be sufficiently large. Because the ML interpreter is
-not recursive this is reasonably safe, provided that the stack
-requirements of the I/O are known and limited. Beneath the ML stack
-is the IL stack. Subroutine calls in the IL have their return
-address pushed onto this stack. The ML interpreter does check for
-stack overflow by measuring the distance between the top of the IL
-stack and the end of the BASIC program; if this ever becomes less
-than the SPARE parameter, the stack is considered to have
-overflowed.
-      Beneath the IL stack is the BASIC stack. This holds the line
-numbers for GOSUB lines as they are executed. There are two
-instructions in the IL for accessing the top element of this stack
-(i.e. a Push and a Pop). For these instructions to work properly it
-is essential that the IL stack be empty. No check is made in the ML
-for this condition, and it is the responsibility of the IL program
-to insure this form of stack integrity. In other words, BASIC
-language GOSUBs and RETURNs cannot be processed within an IL
-subroutine.
-
-      The interpretation of the BASIC program is tied to a pointer
-(invisible to the IL) which points to the current character in the
-current line. The IL has no direct control over this pointer, but
-several of the IL instructions cause it to be advanced or otherwise
-modified. In particular it may be changed to point to the beginning
-of another BASIC line to implement the BASIC sequence control
-operations (GOTO, GOSUB, RETURN). It may also be exchanged with its
-logical dual, a pointer to the current character in the input line
-buffer. This permits the same interpreter to operate on the BASIC
-program stored in memory or on a direct execution statement in the
-line buffer.
-
-      There are a number of IL operations which may result in an
-error condition. All errors abort the IL execution and print out on
-the console the IL program counter at which the error occurred. If
-the program execution flag was set, the most recently accessed BASIC
-line number is also typed out in the message. The relative address
-(relative to the beginning of the IL) becomes the error number in
-the error message. Since only one error is possible in most
-operations, this gives a unique identification of the difficulty.
-The IL address is printed in decimal and represents the address of
-the next byte which would have been executed but for the error.
-There is one operation which has two possible failure modes; for one
-of these the IL address is decremented before printing to
-distinguish it from the other. Error stops may be explicitly
-requested in the IL program by the execution of a branch with a
-zero offset.
-      After typing out the error addresses, the ML interpreter
-clears the ML and IL stacks (but not the BASIC stack!) and restarts
-the IL interpreter at relative address 0. Nothing else is changed,
-except that the execution flag is cleared, putting the interpreter
-into the command mode. When the Break condition is recognized in
-advancing to the next BASIC statement this is treated by the ML as
-
-                                14
-
-an error condition, after forcing the IL program counter to relative
-zero.
-      The ML interpreter maintains a flag to distinguish program RUN
-mode from direct statement execution (command mode). Advancing to
-the next statement (an IL instruction) examines this flag, and if
-in the command mode, the IL program is restarted at the beginning.
-If the flag is set in the RUN mode, execution resumes at the IL
-address saved by the Execute instruction. It is important that the
-Execute instruction be given in the IL before any Next BASIC
-statement advance, but once it has been done there is no restriction
-(i.e. the saved address is never lost).
-      The Break condition is tested only during the execution of
-the statement advance (Next), so that resumption of an interrupted
-program leaves no computational gaps. The Break condition is also
-tested during a LIST operation, but only to abort the listing; if
-the LIST occurred within program execution (i.e. with the RUN mode
-flag set), a second Break condition is required to terminate the
-program.
-
-      The following is a detailed description of the operation of
-each of the IL opcodes. With each description is also given the
-hexadecimal opcode and the mnemonic recognized by the assembler.
-Not all of the opcodes are defined. Some have been incorporated
-into unused functions; others are reserved for possible future
-expansion and execute as NOPs.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                15
-
-               INTERPRETIVE LANGUAGE OPERATION CODES
-
-SX n    00-07   Stack Exchange.
-
-                Exchange the top byte of computational stack with
-that "n" bytes into the stack. The top byte of the stack is
-considered to be byte 0, so SX 0 does nothing. The sequence of
-instructions
-                          SX 1
-                          SX 3
-                          SX 1
-                          SX 2
-
-may be used to exchange the top two numbers (two bytes each) on the
-stack. Only the top eight bytes on the stack are accessible, to this
-instruction. If the stack is empty an error stop may or may not
-occur, depending on which ML interpreter is implemented.
-
-NO      08      No Operation.
-                This may be used as a space filler (such as to
-ignore a skip).
-
-LB n    09nn    Push Literal Byte onto Stack.
-                This adds one byte to the computational stack, which
-is the second byte of the instruction. An error stop will occur if
-the stack overflows.
-
-LN n    0Annnn  Push Literal Number.
-                This adds the following two bytes to the
-computational stack, as a 16-bit number. Stack overflow results in
-an error stop.
-
-DS      0B      Duplicate Top Number (two bytes) on Stack.
-                An error stop will occur if there are less than two
-bytes on the expression stack or if the stack overflows.
-
-SP      0C      Stack Pop.
-                The top two bytes are removed from the computational
-stack and discarded. Underflow results in an error stop.
-
-SB      10      Save BASIC Pointer.
-                If the BASIC pointer is pointing into the input line
-buffer, it is copied to the Saved Pointer; otherwise the two
-pointers are exchanged.
-
-RB      11      Restore BASIC Pointer.
-                If the Saved Pointer is pointing into the input line
-buffer, it is replaced by the value in the BASIC pointer; otherwise
-the two pointers are exchanged.
-      Normally the Saved Pointer will point to the next item in the 
-input line buffer while the BASIC pointer points to the program 
-being executed. When an INPUT instruction in BASIC is interpreted, 
-the two pointers are exchanged by the SB opcode so that the 
-expression handling capabilities of the interpreter may be applied 
-to the input data, then the pointers are restored (exchanged again) 
-by the RB. In direct execution (command mode) the BASIC pointer is
-
-                                16
-
-already in the input line buffer, and the contents of the Saved 
-Pointer are meaningless; in this case the SB instruction does not 
-alter the BASIC pointer, and the RB opcode should leave both 
-pointers pointing to the next item in the input string.
-
-FV      12      Fetch Variable.
-                The top byte of the computational stack is used to
-index into Page 00. It is replaced by the two bytes fetched. Error
-stops occur with stack overflow or underflow.
-
-SV      13      Store Variable.
-                The top two bytes of the computational stack are
-stored into memory at the Page 00 address specified by the third
-byte on the stack. All three bytes are deleted from the stack.
-Underflow results in an error stop.
-
-GS      14      GOSUB Save.
-                The line number on the current BASIC line is pushed
-onto the BASIC region of the control stack. It is essential that
-the IL stack be empty for this to work properly but no check is
-made for that condition. An error stop occurs on stack overflow.
-
-RS      15      Restore Saved Line.
-                Pop the top two bytes off the BASIC region of the
-control stack, making them the current line number. Set the BASIC
-pointer at the beginning of that line. Note that this is the line
-containing the GOSUB which caused the line number to be saved. As
-with the GS opcode, it is essential that the IL region of the
-control stack be empty. If the line number popped off the stack does
-not correspond to a line in the BASIC program an error stop occurs.
-An error stop also results from stack underflow.
-
-GO      16      GOTO.
-                Make current the BASIC line whose line number is
-equal to the value of the top two bytes in the expression stack.
-That is, the top two bytes are popped off the computational stack,
-and the BASIC program is searched until a matching line number is
-found. The BASIC pointer is then positioned at the beginning of that
-line and the RUN mode flag is turned on. Stack underflow and
-non-existent BASIC line result in error stops.
-
-NE      17      Negate (two's complement).
-                The number in the top two bytes of the expression
-stack is replaced with its negative.
-
-AD      18      Add.
-                Add the two numbers represented by the top four
-bytes of the expression stack, and replace them with the two-byte
-sum. Stack underflow results in an error stop.
-
-SU      19      Subtract.
-                Subtract the two-byte number on the top of the
-expression stack from the next two bytes and replace the four bytes
-with the two-byte difference. This is exactly equivalent to the
-two-instruction sequence
-                          NE
-                          AD
-                                17
-
-and has the same error stop on underflow.
-
-MP      1A      Multiply.
-                Multiply the two numbers represented by the top four
-bytes of the computational stack, and replace them with the least
-significant 16 bits of the product. Stack underflow is possible.
-
-DV      1B      Divide.
-                Divide the number represented by the top two bytes
-of the computational stack into that represented by the next two.
-Replace the four bytes with the quotient and discard the remainder.
-This is a signed (two's complement) integer divide, resulting in a
-signed integer quotient. Stack underflow or attempted division by
-zero result in an error stop.
-
-CP      1C      Compare.
-                The number in the top two bytes of the expression
-stack is compared to (subtracted from) the number in the fourth and
-fifth bytes of the stack, and the result is determined to be
-Greater, Equal, or Less. The low three bits of the third byte mask a
-conditional skip in the IL program to test these conditions; if the
-result corresponds to a one bit, the next byte of the IL code is
-skipped and not executed. The three bits correspond to the
-conditions as follows:
-        bit 0   Result is Less
-        bit 1   Result is Equal
-        bit 2   Result is Greater
-Whether the skip is taken or not, all five bytes are deleted from
-the stack. This is a signed (two's complement) comparison so that
-any positive number is greater than any negative number. Multiple
-conditions, such as greater-than-or-equal or unequal (i.e. greater-
-than-or-less-than), may be tested by forming the condition mask byte
-of the sum of the respective bits. In particular, a mask byte of 7
-will force an unconditional skip and a mask byte of 0 will force no
-skip. The other five bits of the control byte are ignored. Stack
-underflow results in an error stop.
-
-NX      1D      Next BASIC Statement.
-                Advance to the next line in the BASIC program, if in
-the RUN mode, or restart the IL program if in the command mode. The
-remainder of the current line is ignored. In the Run mode if there
-is another line it becomes current with the pointer positioned at
-its beginning. At this time, if the Break condition returns true,
-execution is aborted and the IL program is restarted after printing
-an error message. Otherwise IL execution proceeds from the saved IL
-address (see the XQ instruction). If there are no more BASIC
-statements in the program an error stop occurs.
-
-LS      1F      List The Program.
-                The expression stack is assumed to have two 2-byte
-numbers. The top number is the line number of the last line to be
-listed, and the next is the line number of the first line to be
-listed. If the specified line numbers do not exist in the program,
-the next available line (i.e. with the next higher line number) is
-assumed instead in each case. If the last line to be listed comes
-
-
-                                18
-
-before the first, no lines are listed. If the Break condition comes
-true during a List operation, the remainder of the listing is
-aborted. Zero is not a valid line number, and an error stop occurs
-if either line number specification is zero. The line number
-specifications are deleted from the stack.
-
-PN      20      Print Number.
-                The number represented by the top two bytes of the
-expression stack is printed in decimal with leading zero
-suppression. If it is negative, it is preceded by a minus sign
-(hyphen) and the magnitude is printed. Stack underflow is possible.
-
-PQ      21      Print BASIC String.
-                The ASCII characters beginning with the current
-position of the BASIC pointer are printed on the console. The string
-to be printed is terminated by the quotation mark ("), and the BASIC
-pointer is left at the character following the terminal quote. An
-error stop occurs if a carriage return is imbedded in the string.
-
-PT      22      Print Tab.
-                Print one or more spaces on the console, ending at
-the next multiple of eight character positions (from the left
-margin).
-
-NL      23      New Line.
-                Output a carriage-return-linefeed sequence to the
-console.
-
-PC "xxxx"  24xxxxxxXx   Print Literal String.
-                        The ASCII string follows the opcode and its
-last byte has the most significant bit set to one. The character
-string is output to the console unmodified; that is, all eight bits
-of each byte is output, so that the last byte and only that byte is
-output with the parity bit set to one. This of course may be altered
-by the output routine.
-
-GL      27      Get Input Line.
-                ASCII characters are accepted from the console input
-to fill the line buffer. If the line length exceeds the available
-space, the excess characters are ignored and bell characters are
-output. The line is terminated by a carriage return. NUL and DEL
-codes (hex 00 and FF) are ignored; linefeed and DC3 respectively
-turn the "tape mode" on and off. Any characters which match the
-Backspace parameter result in the deletion of the previous character
-in the line buffer, if any; if the line buffer is empty the effect
-is that of a cancel. Any character which matches the Cancel
-parameter stores a carriage return in the first position of the line
-buffer and terminates the input. On completing one line of input,
-the BASIC pointer is set to point to the first character in the
-input line buffer, and a carriage-return-linefeed sequence is
-output.
-
-IL      2A      Insert BASIC Line.
-                Beginning with the current position of the BASIC
-pointer and continuing to the carriage return, the line is inserted
-into the BASIC program space; for a line number, the top two bytes
-
-                                19
-
-of the expression stack are used. If this number matches a line
-already in the program it is deleted and the new one replaces it. If
-the new line consists of only a carriage return, it is not inserted,
-though any previous line with the same number will have been
-deleted. The lines are maintained in the program space sorted by
-line number. If the new line to be inserted is a different size than
-the old line being replaced, the remainder of the program is shifted
-over to make room for it or to close up the gap as necessary. If
-there is insufficient memory to fit in the new line, the program
-space is unchanged and an error stop occurs (with the IL address
-decremented). A normal error stop occurs on expression stack
-underflow or if the number is zero, which is not a valid line
-number. After completing the insertion, the IL program is restarted
-in the command mode.
-
-MT      2B      Mark the BASIC program space Empty.
-                Also clears the BASIC region of the control stack
-and restart the IL program in the command mode. The memory bounds
-and stack pointers are reset by this instruction to signify an empty
-program space, and the line number of the first line is set to zero,
-which is the indication of the end of the program. The remainder of
-the program is not altered, though it is now vulnerable to intrusion
-by the control stack. The program may be recovered if accidentally
-CLEARed by storing a non-zero line number in the first two bytes of
-the BASIC program space, then requesting a LIST. If this is made on
-a machine-readable medium, it may be reloaded. Any execution of the
-IL instruction after a MT instruction will destroy the contents of
-memory not enclosed by the program bounds in locations 0020-0025.
-
-XQ      2C      Execute.
-                Turns on RUN mode. This instruction also saves the
-current value of the IL program counter for use of the NX
-instruction, and sets the BASIC pointer to the beginning of the
-BASIC program space. An error stop occurs if there is no BASIC
-program. This instruction must be executed at least once before the
-first execution of a NX instruction.
-
-WS      2D      Stop.
-                Stop execution and restart the IL program in the
-command mode. The entire control stack (including the BASIC region)
-is also vacated by this instruction. This instruction effectively
-jumps to the Warm Start entry of the ML interpreter.
-
-US      2E      Machine Language Subroutine Call.
-                The top six bytes of the expression stack contain
-three numbers with the following interpretations: The top number is
-loaded into the A (or A and B) register; the next number is loaded
-into 16 bits of Index register; the third number is interpreted as
-the address of a machine language subroutine to be called using the
-normal subroutine call sequence (which is simulated for this purpose
-by the ML interpreter). These six bytes on the expression stack are
-replaced with the 16-bit result returned by the subroutine. Stack
-underflow results in an error stop.
-
-RT      2F      IL Subroutine Return.
-                The IL control stack is popped to give the address
-
-                                20
-
-of the next IL instruction. An error stop occurs if the entire
-control stack (IL and BASIC) is empty.
-
-JS a    3000-37FF       IL Subroutine Call.
-                        The least significant eleven bits of this
-2-byte instruction are added to the base address of the IL program
-to become the address of the next instruction. The previous contents
-of the IL program counter are pushed onto the IL region of the
-control stack. Stack overflow results in an error stop.
-
-J a     3800-3FFF       Jump.
-                        The low eleven bits of this 2-byte
-instruction are added to the IL program base address to determine
-the address of the next IL instruction. The previous contents of the
-IL program counter is lost.
-
-BR a    40-7F   Relative Branch.
-                The low six bits of this instruction opcode are
-added algebraically to the current value of the IL program counter
-to give the address of the next IL instruction. Bit 5 of the opcode
-is the sign, with + signified by 1, - by 0. The range of this branch
-is 31 bytes from address of the byte following the opcode, in either
-direction. An offset of zero (i.e. opcode 60) results in an error
-stop. The branch operation is unconditional.
-
-BC a "xxx"   80xxxxXx-9FxxxxXx  String Match Branch.
-                                The ASCII character string in the IL
-following this opcode is compared to the string beginning with the
-current position of the BASIC pointer, ignoring blanks in the BASIC
-program. The comparison continues until either a mismatch is found,
-or an IL byte is reached with the most significant bit set to one.
-This is the last byte of the string in the IL, and it is compared as
-a 7-bit character; if equal, the BASIC pointer is positioned after
-the last matching character in the BASIC program and the IL program
-continues with the next instruction in sequence. Otherwise the BASIC
-pointer is not altered and the low five bits of the Branch opcode
-are added to the IL program counter to form the address of the next
-IL instruction. If the strings do not match and the branch offset is
-zero an error stop occurs.
-
-BV a    A0-BF   Branch if Not Variable.
-                If the next non-blank character pointed to by the
-BASIC pointer is a capital letter, its ASCII code is doubled and
-pushed onto the expression stack and the IL program advances to the
-next instruction in sequence, leaving the BASIC pointer positioned
-after the letter; if not a letter the branch is taken and the BASIC
-pointer is left pointing to that character. An error stop occurs if
-the next character is not a letter and the offset of the branch is
-zero, or on stack overflow.
-
-BN a    C0-DF   Branch if Not a Number.
-                If the next non-blank character pointed to by the
-BASIC pointer is not a decimal digit, the low five bits of the
-opcode are added to the IL program counter, or if zero an error stop
-occurs. If the next character is a digit, then it and all decimal
-digits following it (ignoring blanks) are converted to a 16-bit
-
-                                21
-
-binary number which is pushed onto the expression stack. In either
-case the BASIC pointer is positioned at the next character which is
-neither blank nor digit. Stack overflow will result in an error
-stop.
-
-BE a    E0-FF   Branch if Not Endline.
-                If the next non-blank character pointed to by the
-BASIC pointer is a carriage return, the IL program advances to the
-next instruction in sequence; otherwise the low five bits of the
-opcode (if not zero) are added to the IL program counter to form the
-address of the next IL instruction. In either case the BASIC pointer
-is left pointing to the first non-blank character encountered; this
-instruction will not pass over the carriage return, which must
-remain for testing by the NX instruction. As with the other
-conditional branches, the branch may only advance the IL program
-counter from 1 to 31 bytes; an offset of zero results in an error
-stop.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                22
-
-
-                          TBIL ASSEMBLER
-
-      To aid in developing and modifying the IL program an assembler
-has been written in **TINY BASIC**. This assembler accepts the mnemonics
-for the IL assembly language and outputs a hexadecimal object code
-suitable for loading into memory. It is a two-pass assembler,
-building the symbol table on the first pass and generating the full
-hex object code on the second pass.
-      Since **TINY BASIC** does not allow strings or arrays, the source
-file and the symbol table are manipulated using the USR function to
-call on the standard machine language subroutines to load and store
-bytes in memory. This is unfortunately very slow, so a third
-subroutine, which loads two bytes, is also used in an effort to
-speed things up a little. Comments in the source listing of the
-assembler indicate how such a routine may be coded. The assembler is
-still compute-bound, and can be expected to take several hours on
-each pass. This is considered acceptable only because of the
-infrequent need to assemble the IL code.
-
-      The assembler accepts free-form input with two kinds of source
-lines: Comment lines and program instruction lines. Each line of
-either kind must begin with a line number. This is actually a kludge
-to convince **TINY BASIC** to read the source line with an INPUT
-command, and the number has no significance to the assembler other
-than that it is zero on the last line of the program.
-      Comment lines are indicated to the assembler by a period
-following the line number. They are not processed further.
-      Instruction lines may begin with a label or not. A label is
-signified by a leading colon (which is not part of the label)
-followed by a letter and up to three more letters and/or digits, and
-terminated by a blank.
-      The next field after the label, or the first field of a line
-without a label, is the instruction mnemonic. This is one of the
-two-letter codes (or one letter in the case of J) defined earlier.
-      The instructions which require operands should be followed by
-at least one blank, then the operand in the correct format. Jumps
-and branches accept a label reference; the branches also accept the
-single symbol "*" to signify an error stop branch. The SX
-instruction requires a single octal digit (1-7).
-      The LB and LN instructions should be followed by a decimal
-number. This number is processed by the BASIC INPUT command which
-accepts expressions and ignores blanks, so care must be taken in
-what is allowed to follow the number. In particular it may not be
-followed by more decimal digits or the characters + - * or /. The
-number must start with a digit.
-      The BC and PC instructions are followed by a string (after the
-label in the case of BC). The string is enclosed in a pair of
-delimiters which may be any non-blank character except the ASCII
-circumflex (hex 5E which sometimes prints as an up-arrow). Any
-character within the string which is followed by a circumflex has a
-hex 40 subtracted from its code, making it possible to generate
-strings with control characters in them. The last character of the
-string has the most significant bit set to one in the object code.
-      Everything on the source line after the operands, if any, is
-treated by the assembler as comments.
-
-                                23
-
-      The operation of the assembler is shaped by the restrictions
-imposed by **TINY BASIC**. The source lines must not be larger than 60
-or so characters to leave room in the expression stack. Each source
-line must end in a DC3 control (X-OFF) unless other reader control
-is used, since several tens of seconds are required to process each
-line.
-      The program is loaded and started with a RUN. It will ask for
-the addresses of the byte load and store routines, which should be
-typed in in decimal. It will also ask for the memory address that
-the program is to load into. This address is only used in the
-generation of the location counter output and has no effect on the
-code generation.
-      One of the first things done in the assembler is to search
-for the mnemonic table, which is imbedded in pseudo-comment lines
-near the beginning of the assembler. These are identified by the
-leading asterisk on the line, although the search is keyed to line
-number 3. The symbol table is also initialized at empty.
-      Each line of the assembled program will have the hexadecimal
-memory address, the hexadecimal object code to be loaded into that
-address, a semicolon marking the end of the machine code, then the
-next source line. Notice that the source line is echoed as it is
-read (this is done by the I/O routines), so the assembled code for
-that line is at the beginning of the next line. If the source file
-contains a linefeed character after each carriage return, then the
-object code will appear on the same line in the listing, but in fact
-the object code follows it in the output file. In the case of the
-LN, PC, and BC opcodes, which generate more than two bytes of code,
-a second line will be used for the excess object code. The listing
-produced for Pass 1 will look very much like that for Pass 2,
-except that some of the object code will be incomplete.
-
-      Assembly errors which do not crash the program will be
-identified by a two letter indication enclosed in a pair of
-asterisks. The following is a summary of the errors recognized and
-flagged by this assembler:
-
-        *DL* Duplicate label (Pass 1 only)
-        *IE* Unidentifiable mnemonic
-        *OP* Incorrectly formed Operand
-        *US* Undefined symbol in jump or branch
-        *LE* Premature line end
-
-     Some source program errors will be trapped by the **TINY BASIC**
-interpreter and halt the assembler. These are catastrophic in the
-sense that not only is the assembly aborted, but the remainder of
-the source file is loaded by TINY into memory over the assembler as
-if it were a BASIC program, thus destroying the integrity of the
-assembler. Errors which are catastrophic are:
-
-        Lines without a line number
-        Excessively long lines
-        Invalid expression as the operand of LN or LB
-        Symbol table overflow
-
-
-
-
-                                24
-
-      This version of the assembler may be expected to run in
-something under 8K bytes of memory, depending on how many of the
-comment lines and excess blanks are removed.
-
-      Operationally, the program is fairly direct with few tricky
-kludges.
-      The symbol table is built by the assembler by stealing space
-out of the GOSUB stack. For each label to be added to the table,
-three unRETURNed GOSUBs are executed, making six bytes available.
-Symbols with less than 4 characters are filled out with spaces. The
-same symbol table search routine is used for both definition (to
-check for duplicates) and reference. The table is searched with the
-memory fetch USR commands.
-      The opcode table is searched in a similar way. The hex codes
-are never actually converted to binary, but a special subroutine
-selects the appropriate digit printing statement based on the ASCII
-value of the codes. In the few cases where the operand is imbedded
-into the opcode, the extra bits are added in before output.
-      The type of instruction (i.e. the kind of operands accepted
-for the particular instruction) is determined by its position in the
-table: The first position is SX; the next two are jumps; the next
-five are branches, followed by the string opcodes (note the
-overlap). The literal byte and number opcodes are finally followed
-by all the generics (no operand). The assembler knows how many
-opcodes there are, and stops looking when this count is reached,
-rather than looking for some end-of-table flag. The table is broken
-up into several lines of **TINY BASIC**; the line boundaries are aligned
-with the mnemonic positions in the table, so they represent opcodes
-which never match (the mnemonic would be CR-NUL).
-
-      The operation of the remainder of the assembler is fairly
-self-evident and needs no further discussion.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                25
-
-1 REM **TINY BASIC** IL ASSEMBLER VERSION 0        1 JAN 1977
-2 GOTO 100
-3 *SX00JS30J 38BR40BVA0BNC0BEE0BC80PC24LB09LN0ANO08
-4 *DS0BSP0CSB10RB11FV12SV13GS14RS15GO16NE17AD18SU19MP1ADV1B
-5 *CP1CNX1DLS1FPN20PQ21PT22NL23GL27IL2AMT2BXQ2CWS2DUS2ERT2F
-6
-7               ....COPYRIGHT (C) 1977  BY TOM PITTMAN....
-10 REMARKS:
-11 LINES 3-5 ARE OPCODE TABLE
-12 LABEL TABLE USES GOSUB STACK
-13 .
-14 THIS PROGRAM USES A 2-BYTE PEEK USR FUNCTION
-15 PUT ITS ADDRESS IN VARIABLE D.
-16 IN 6800:
-17   LDA A,1,X        A IS LSB
-18   LDA B,0,X
-19   RTS
-20 IN 6502:
-21   STX $C3          ($C2=00)
-22   LDA ($C2),Y      GET MSB
-23   PHA              SAVE IT
-24   INY
-25   LDA ($C2),Y      GET LSB
-26   TAX
-27   PLA
-28   TAY              Y=MSB
-29   TXA
-30   RTS
-31 NOTE THAT THIS PROGRAM CORRECTS FOR 2-BYTE-DATA
-32 IN 6502 FORMAT (LSB,MSB) WHEN INITIALIZING.
-33 .
-34 THE FOLLOWING VARIABLES ARE DEFINED:
-35 A  STARTING ADDRESS
-36 B  LINE BUFFER POINTER ADDRESS
-37 C  LINE POINTER WORK
-38 D  2-BYTE PEEK USR FUNCTION ADDRESS
-39 E  END OF OPCODE TABLE
-40 F  PASS #
-41 G  PEEK USR FUNCTION ADDRESS
-42 H  HEX WORK
-43 I  TEMP WORK
-44 J  TEMP WORK
-45 K  TEMP WORK (HEX)
-46 L  (RELATIVE) LOCATION COUNTER
-47 M
-48 N  LINE NUMBER
-49 O  OP TABLE START
-50 P  POKE USR FUNCTION ADDRESS
-51 Q
-52 R
-53 S  SYMBOL TABLE START
-54 T  TEMP (TABLE POINTER)
-55 U
-56 V  SYMBOL WORK
-57 W  SYMBOL WORK
-
-
-                                26
-
-58 X ERROR COUNT
-59 Y
-60 Z
-61 .
-62 SOURCE FILE IS IN THE FORM
-63 (LINE NUMBER) :LABEL OP OPND COMMENTS
-64 THE LINE NUMBER MUST BE >0.
-65 THE LABEL IS IDENTIFIED BY THE LEADING COLON,
-66 AND MAY BE 1-4 CHARACTERS LONG (FIRST IS LETTER);
-67 IT IS TERMINATED BY BLANK, AND MAY BE OMITTED.
-68 .
-69 OP IS THE 2-LETTER OPCODE.
-70 OPND IS THE OPERAND:
-71 FOR SX IT MUST BE A DIGIT 1-7
-72 FOR LB OR LN, A DECIMAL NUMBER 0-255 OR 0-65535
-73 FOR PC, A STRING OF THE FORM 'STRING'
-74 FOR JUMPS & BRANCHES IT MUST BE A SYMBOL
-75 BRANCHES MAY REFER TO SYMBOL "*"
-76 TO INVOKE ERROR STOP FORM.
-77 BC REQUIRES BOTH A SYMBOL AND A STRING,
-78 SEPARATED BY ONE OR MORE SPACES.
-79 COMMENTS SHOULD BE PRECEDED BY A SPACE,
-80 AND SHOULD NOT BEGIN WITH A DIGIT OR (+,-,*,/)
-81 COMMENT LINES HAVE A PERIOD
-82 FOLLOWING THE LINE NUMBER.
-83 THE END OF FILE IS A LINE NUMBER 0.
-84 .
-85 SOURCE IS LISTED ON BOTH PASSES.
-86 OUTPUT IS: HEX ADDRESS, HEX CODE, SEMICOLON,
-87 ON SAME LINE AS FOLLOWING SOURCE.
-88 .
-89 .
-90 ERROR FLAGS:
-91 *DL* DUPLICATE LABEL (PASS 1)
-92 *OP* OPERAND FORMAT ERROR
-93 *IE* UNDEFINED OP CODE
-94 *LE* INCOMPLETE LINE
-95 *US* UNDEFINED SYMBOL (PASS 2)
-99 .
-100 REM
-101 REM LINES 101-199 ONLY NEED TO EXECUTE ONCE.
-102 REM THEY SHOULD BE DELETED AT STOP.
-103 REM INPUT ADDRESS CONSTANTS
-104 PRINT "PLEASE TYPE IN USR ADDRESS FOR PEEK (IN DECIMAL)";
-105 INPUT G
-106 PRINT "ADDRESS FOR POKE";
-107 INPUT P
-108 PRINT "ADDRESS FOR 2-BYTE PEEK";
-109 INPUT D
-110 B=47
-111 O=USR(D,32)
-112 E=USR(D,34)
-113 IF USR(G,B)>0 GOTO 118
-114 B=46
-115 O=USR(G,32)+USR(G,33)*256
-116 E=USR(G,34)+USR(G,35)*256
-
-                                27
-
-118 E=E+1
-119 REM FIND OPCODE TABLE (LINE 3)
-120 O=O+1
-121 IF USR(G,O)<>3 GOTO 120
-122 O=O+2
-130 Y=1
-131 N=0
-132 PRINT "DO YOU NEED INSTRUCTIONS (Y OR N)";
-133 INPUT I
-134 IF I=Y LIST 61,99
-190 PRINT "REMOVE LINES 10-99, 101-199"
-191 PRINT "OR IF YOU HAVE PLENTY OF MEMORY,"
-192 PRINT "RETYPE LINE: 100 GOTO 200"
-193 PRINT "THEN TYPE RUN."
-198 END
-199 REM 2-PASS ASSEMBLER. START FIRST PASS.
-200 X=0
-201 S=E
-202 F=0
-203 PRINT "(DECIMAL) STARTING ADDRESS";
-204 INPUT A
-205 F=F+1
-206 IF F=3 GOTO 760
-207 L=0
-208 PRINT
-209 PRINT "TBIL ASSEMBLER, PASS ";F
-210 PRINT
-211 GOSUB 460
-212 PRINT ";    ";
-213 REM GET NEXT INPUT LINE
-214 I=USR(P,USR(G,B),13)
-215 INPUT N
-216 REM LINE NUMBER 0 IS EOF
-217 IF N=0 GOTO 205
-218 GOSUB 460
-219 REM CHECK FOR COMMENT
-220 I=USR(G,USR(G,B))
-221 IF I<58 GOTO 212
-222 REM PROCESS LABEL, IF ANY
-223 IF I>64 GOTO 300
-224 GOSUB 405
-225 GOSUB 500
-231 REM CHECK FOR DUPLICATES ON PASS 1
-232 IF F>1 GOTO 300
-234 IF T=0 GOSUB 237
-235 GOTO 901
-237 GOSUB 238
-238 GOSUB 239
-239 S=S-6
-240 REM INSERT THIS ONE
-241 I=USR(P,S,V/256)+USR(P,S+1,V)
-242 I=USR(P,S+2,W/256)+USR(P,S+3,W)
-243 I=USR(P,S+4,L/256)+USR(P,S+5,L)
-290 REM LOOK AT OPCODE
-300 GOSUB 410
-301 IF I<65 GOTO 911
-
-                                28
-
-305 I=USR(D,USR(G,B))
-306 GOSUB 404
-307 REM SEARCH OPCODE TABLE
-308 T=O
-309 IF USR(D,T)=I GOTO 313
-310 T=T+4
-311 IF T<O+167 GOTO 309
-312 GOTO 911
-313 V=USR(G,T+2)
-314 W=USR(G,T+3)
-315 L=L+1
-316 IF T=O GOTO 330
-317 IF T<O+10 GOTO 340
-318 IF T<O+30 GOTO 360
-319 IF T=O+32 GOTO 380
-320 IF T=O+36 GOTO 350
-321 IF T=O+40 GOTO 550
-322 REM THESE OPCODES HAVE NO OPERAND
-323 H=V
-324 GOSUB 434
-325 H=W
-326 GOSUB 434
-327 PRINT ";  ";
-328 GOTO 214
-329 REM STACK EXCHANGE OPERATOR
-330 GOSUB 410
-331 W=USR(G,USR(G,B))
-332 IF I>48 IF I<56 GOTO 323
-333 REM OPERAND FORMAT ERROR
-334 GOTO 921
-336 IF F=1 GOTO 212
-337 GOTO 931
-339 REM JUMP & CALL
-340 L=L+1
-341 GOSUB 410
-342 IF I<65 GOTO 334
-344 K=W-W/16*16
-345 GOSUB 500
-346 IF T=0 GOTO 336
-347 K=I+(K+48)*256
-348 GOTO 356
-349 REM PUSH LITERAL BYTE ON STACK
-350 L=L+1
-351 GOSUB 410
-352 IF I<48 GOTO 334
-353 IF I>57 GOTO 334
-354 INPUT K
-355 K=K+2304
-356 GOSUB 440
-357 PRINT ";";
-358 GOTO 214
-359 REM RELATIVE BRANCHES
-360 K=T
-362 GOSUB 410
-363 IF I=42 GOTO 365
-364 IF I<65 GOTO 334
-
-                                29
-
-365 GOSUB 500
-366 IF T=0 IF K<O+28*F GOTO 336
-367 IF I>L+31 GOTO 334
-368 IF K=O+12 THEN I=I+32
-369 IF I<L GOTO 334
-370 I=I-L
-371 T=K
-372 H=USR(G,K+2)+I/16
-373 K=I-I/16*16
-374 GOSUB 434
-375 GOSUB 455
-376 IF T<O+28 GOTO 327
-377 GOTO 381
-379 REM STRING OPERATORS
-380 PRINT "24";
-381 GOSUB 410
-382 J=L
-383 T=I
-384 GOSUB 405
-385 K=USR(G,USR(G,B))
-386 GOSUB 405
-387 I=USR (G,USR(G,B))
-388 IF I<>94 GOTO 391
-389 K=K-64
-390 GOTO 386
-391 L=L+1
-392 IF I=13 GOTO 334
-393 IF T=I GOTO 397
-394 GOSUB 450
-395 K=I
-396 GOTO 386
-397 K=K+128
-398 GOSUB 450
-399 PRINT ";";
-400 IF L=J+1 GOTO 214
-401 GOTO 210
-402 REM      ---      SUBROUTINES
-403 REM ADVANCE INPUT LINE POINTER
-404 GOSUB 405
-405 C=USR(P,B,USR(G,B)+1)
-406 RETURN
-407 REM
-408 REM SKIP BLANKS IN INPUT LINE
-409 GOSUB 405
-410 I=USR(G,USR(G,B))
-411 IF I=32 GOTO 409
-412 IF I>32 RETURN
-413 GOTO 941
-418 REM
-419 REM PRINT HEX DIGITS
-420 PRINT "A";
-421 RETURN
-422 PRINT "B";
-423 RETURN
-424 PRINT "C";
-425 RETURN
-
-                                30
-
-426 PRINT "D";
-427 RETURN
-428 PRINT "E";
-429 RETURN
-430 PRINT "F";
-431 RETURN
-434 IF H>64 GOTO H+H+290
-435 H=H-48
-436 IF H>9 GOTO 400+H+H
-437 PRINT H;
-438 RETURN
-439 REM PRINT NUMBER AS HEX
-440 H=K/4096
-441 IF K<0 THEN H=H-1
-442 K=K-H*4096
-443 IF H<0 THEN H=H+16
-444 GOSUB 436
-445 H=K/256
-446 K=K-H*256
-447 GOSUB 436
-450 H=K/16
-451 K=K-H*16
-452 GOSUB 436
-455 H=K
-456 GOTO 436
-458 REM
-459 REM PRINT LOCATION COUNTER
-460 K=A+L
-461 GOSUB 440
-462 PRINT " ";
-463 RETURN
-498 REM
-499 REM LOOK UP SYMBOL IN TABLE
-500 V=0
-501 W=8224
-502 C=USR(G,B)
-503 I=USR(G,C)
-504 IF I<48 GOTO 525
-505 I=USR(G,C+1)
-506 IF I<32 THEN I=(USR(P,C+1,32)+USR(P,C+2,13))*0+32
-508 W=USR(D,C)
-509 GOSUB 404
-510 IF V>0 GOTO 513
-511 V=W
-512 GOTO 501
-513 T=S
-514 GOTO 518
-515 I=USR(D,T+4)
-516 IF V=USR(D,T) IF W=USR(D,T+2) RETURN
-517 T=T+6
-518 IF T<E GOTO 515
-519 T=0
-520 I=L
-521 RETURN
-524 REM ASTERISK OPERAND?
-525 IF I<>42 GOTO 510
-
-                                31
-
-526 T=1
-527 I=L
-528 GOTO 405
-548 REM
-549 REM PUSH 2-BYTE LITERAL ONTO STACK
-550 PRINT "0A;"
-552 GOSUB 460
-553 L=L+2
-554 GOSUB 410
-555 IF I<48 GOTO 334
-556 IF I>57 GOTO 334
-557 INPUT K
-558 GOTO 356
-700 REM PROGRAM END
-760 PRINT
-770 PRINT X;" ERRORS"
-790 END
-900 REM ERROR MESSAGES
-901 PRINT "*DL* ";
-902 X=X+1
-903 GOTO 300
-911 PRINT "*IE* ";
-912 X=X+1
-914 L=L+2
-915 GOTO 214
-921 PRINT "*OP* ";
-922 X=X+1
-923 GOTO 214
-931 PRINT "*US* ";
-932 X=X+1
-933 GOTO 214
-941 PRINT "*LE* ";
-942 X=X+1
-944 RETURN
-999 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                32
 
 
                         IMPLEMENTATION NOTES
@@ -1797,7 +399,7 @@ point variables. This would tend to limit the allowable size of the
 input lines, which share the same workspace with the expression
 stack.
       2. Number-handling routines. Not only would the arithmetic
-routines driving the AD, SU, MP and DV opcodes need rewriting, but
+routines driving the `AD`, `SU`, `MP` and `DV` opcodes need rewriting, but
 also all the other opcodes which work with numbers on the stack
 would need modification. Otherwise the program may find it difficult
 to execute a GOSUB to line number 1.23E2. Perhaps a simpler
@@ -1818,10 +420,6 @@ practical within the bounds of the present system. While all
 variables in TINY are predefined, arrays and variable-length strings
 would require memory allocation and de-allocation routines, address
 pointers, and dimension tables. It is conceivable that this space
-
-
-                                33
-
 could be taken from the unused user program memory space, either at
 the end of the program (by modifying the pointer in 0024-0025 hex)
 or underneath the GOSUB stack (by modifying the pointer in 0022-0023
@@ -1877,10 +475,6 @@ code at location 0003):
                 RT
         :F5     BC             ...ETC.
 
-
-
-                                34
-
       When adding ML subroutines it may be helpful to know where to
 find some of the internal pointers used by TINY. The IL program is
 generally placed at the end of the ML code. Its address is stored in
@@ -1918,27 +512,10 @@ interest are defined here (all addresses are in hexadecimal):
 expression stack pointer, and the end of input line pointer are
 placed in different locations depending on the versions.
 
-
-
       The following is an assembly listing of the currently
 distributed version of **TINY BASIC**.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                35
 
 0000 ;       1 .  ORIGINAL **TINY BASIC** INTERMEDIATE INTERPRETER
 0000 ;       2 .
@@ -1995,10 +572,6 @@ distributed version of **TINY BASIC**.
 0037 88BB;  46 :P2   BE P3
 0039 E1;    47       NX              NO CRLF IF ENDED BY ; OR ,
 003A 1D;    48 :P3   BC P7 '"'
-
-
-                                36
-
 003B 8FA2;  49       PQ              QUOTE MARKS STRING
 003D 21;    50       BR P1           GO CHECK DELIMITER
 003E 58;    51 :SKIP BR IF           (ON THE WAY THRU)
@@ -2055,9 +628,6 @@ distributed version of **TINY BASIC**.
 008A ;      96       BE *
 008A E0;    97       WS
 008B 2D;    98 .
-
-                                37
-
 008C ;      99 :LIST BC RUN "LIST"
 008C 984C4953D4;
 0091 ;     100       BE L2
@@ -2114,9 +684,6 @@ distributed version of **TINY BASIC**.
 00D9 1A;   147       BR T0
 00DA 5A;   148 :T1   BC T2 "/"       FACTORS SEPARATED BY DIVIDE
 00DB 85AF; 149       JS  FACT
-
-                                38
-
 00DD 30E2; 150       DV
 00DF 1B;   151       BR T0
 00E0 54;   152 :T2   RT
@@ -2173,9 +740,6 @@ distributed version of **TINY BASIC**.
 0122 2F;   197 :F5   BC * "("        OTHERWISE MUST BE (EXPR)
 0123 80A8; 198 :F6   JS EXPR
 0125 30BC; 199       BC * ")"
-
-                                39
-
 0127 80A9; 200       RT
 0129 2F;   201 .
 012A ;     202 :ARG  BC A0 ","        COMMA?
@@ -2211,27 +775,4 @@ distributed version of **TINY BASIC**.
 0156 2F;   232 .
 0157 ;    0000
 0000
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                40
 
