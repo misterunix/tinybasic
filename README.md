@@ -1,0 +1,458 @@
+# TinyBASIC
+
+A label-based BASIC interpreter written in Go with floating-point support and extensive math functions. Designed as a module for embedding in other Go programs.
+
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](LICENSE)
+[![Go Version](https://img.shields.io/badge/Go-1.20+-00ADD8?logo=go)](https://go.dev/)
+
+## Features
+
+- **Label-based control flow** - Use meaningful labels instead of line numbers
+- **Floating-point arithmetic** - Full support for floating-point numbers and operations
+- **Extensive math functions** - Trigonometric, logarithmic, and utility functions
+- **Module design** - Easy to embed in other Go programs
+- **Step and Run modes** - Execute programs statement-by-statement or all at once
+- **Callback system** - Custom input/output handlers for integration
+- **Optional LET** - Modern syntax with optional LET keyword
+- **Standard BASIC statements** - FOR/NEXT loops, GOSUB/RETURN, IF/THEN, and more
+
+## Installation
+
+```bash
+go get github.com/misterunix/tinybasic
+```
+
+## Quick Start
+
+```go
+package main
+
+import (
+    "fmt"
+    "tinybasic"
+)
+
+func main() {
+    // Create a new interpreter
+    interp := tinybasic.New()
+
+    // Load a BASIC program
+    program := `
+        X = 10
+        Y = 20
+        RESULT = X + Y
+        PRINT "The sum is:", RESULT
+    `
+    
+    if err := interp.LoadProgram(program); err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+
+    // Run the program
+    if err := interp.Run(); err != nil {
+        fmt.Println("Runtime error:", err)
+    }
+}
+```
+
+## API Reference
+
+### Creating an Interpreter
+
+```go
+interp := tinybasic.New()
+```
+
+### Loading a Program
+
+```go
+err := interp.LoadProgram(source string)
+```
+
+### Execution Control
+
+```go
+// Run the entire program
+err := interp.Run()
+
+// Execute a single statement (for debugging or interactive mode)
+err := interp.Step()
+
+// Check if execution is complete
+done := interp.IsDone()
+
+// Reset interpreter state for a new run
+interp.Reset()
+```
+
+### Variable Access
+
+```go
+// Get a variable value
+value, exists := interp.GetVariable("X")
+
+// Set a variable value
+interp.SetVariable("X", 42.5)
+
+// Get all variables
+vars := interp.GetAllVariables()
+```
+
+### Program Information
+
+```go
+// Get current statement index
+line := interp.GetCurrentLine()
+
+// Get total number of statements
+size := interp.GetProgramSize()
+```
+
+### Custom I/O Callbacks
+
+```go
+// Set input callback
+interp.SetInputCallback(func() (string, error) {
+    var input string
+    fmt.Scanln(&input)
+    return input, nil
+})
+
+// Set output callback
+interp.SetOutputCallback(func(s string) {
+    fmt.Print(s)
+})
+```
+
+## BASIC Language Reference
+
+### Variable Assignment
+
+```basic
+X = 10
+LET Y = 20.5          REM LET is optional
+RESULT = X + Y * 2
+```
+
+### Labels
+
+Labels provide named points in your program for jumps and subroutines:
+
+```basic
+START: PRINT "Beginning program"
+       X = 1
+
+LOOP:  PRINT X
+       X = X + 1
+       IF X <= 10 THEN LOOP
+```
+
+### Operators
+
+- Arithmetic: `+`, `-`, `*`, `/`, `^` (power)
+- Comparison: `=`, `<>`, `<`, `>`, `<=`, `>=`
+- Parentheses for grouping: `(`, `)`
+
+### Math Functions
+
+#### Trigonometric Functions
+- `SIN(x)` - Sine
+- `COS(x)` - Cosine
+- `TAN(x)` - Tangent
+- `ASIN(x)` - Arcsine
+- `ACOS(x)` - Arccosine
+- `ATAN(x)` - Arctangent
+
+#### Logarithmic and Exponential
+- `LOG(x)` - Base-10 logarithm
+- `LN(x)` - Natural logarithm
+- `EXP(x)` - e^x
+- `SQRT(x)` - Square root
+
+#### Utility Functions
+- `ABS(x)` - Absolute value
+- `INT(x)` - Convert to integer (truncate)
+- `FLOOR(x)` - Floor function
+- `CEIL(x)` - Ceiling function
+- `ROUND(x)` - Round to nearest integer
+- `SGN(x)` - Sign (-1, 0, or 1)
+- `RND(x)` - Pseudo-random number
+
+#### Multi-argument Functions
+- `POW(x, y)` - x to the power of y
+- `MIN(x, y)` - Minimum of two values
+- `MAX(x, y)` - Maximum of two values
+
+### Statements
+
+#### PRINT - Output
+
+```basic
+PRINT "Hello, World!"
+PRINT "X =", X
+PRINT X, Y, Z
+```
+
+#### INPUT - Input
+
+```basic
+INPUT X
+INPUT "Enter a number:", Y
+```
+
+#### IF...THEN - Conditional
+
+```basic
+IF X > 10 THEN PRINT "X is large"
+IF X = Y THEN DONE
+```
+
+#### GOTO - Jump to Label
+
+```basic
+GOTO START
+GOTO LOOP
+```
+
+#### GOSUB...RETURN - Subroutine
+
+```basic
+GOSUB CALCULATION
+PRINT RESULT
+GOTO DONE
+
+CALCULATION: RESULT = X * 2
+             RETURN
+
+DONE: END
+```
+
+#### FOR...TO...STEP...NEXT - Loops
+
+```basic
+FOR I = 1 TO 10
+    PRINT I
+NEXT I
+
+FOR X = 10 TO 0 STEP -1
+    PRINT X
+NEXT X
+
+FOR J = 0 TO 100 STEP 5
+    PRINT J
+NEXT J
+```
+
+#### DATA...READ - Static Data
+
+```basic
+READ X, Y, Z
+PRINT X + Y + Z
+DATA 10, 20, 30
+```
+
+#### REM - Comments
+
+```basic
+REM This is a comment
+PRINT "Hello"  REM Comment on same line not supported
+```
+
+#### END - End Program
+
+```basic
+END
+```
+
+## Example Programs
+
+### Calculate Circle Area
+
+```basic
+PI = 3.14159265359
+
+INPUT "Enter radius:", R
+AREA = PI * R ^ 2
+CIRCUMFERENCE = 2 * PI * R
+
+PRINT "Area:", AREA
+PRINT "Circumference:", CIRCUMFERENCE
+END
+```
+
+### Factorial Calculator
+
+```basic
+INPUT "Enter a number:", N
+RESULT = 1
+I = 1
+
+LOOP: IF I > N THEN DONE
+      RESULT = RESULT * I
+      I = I + 1
+      GOTO LOOP
+
+DONE: PRINT "Factorial:", RESULT
+      END
+```
+
+### Fibonacci Sequence
+
+```basic
+N = 10
+A = 0
+B = 1
+
+PRINT "Fibonacci sequence:"
+FOR I = 1 TO N
+    PRINT A
+    TEMP = A + B
+    A = B
+    B = TEMP
+NEXT I
+END
+```
+
+### Trigonometry Table
+
+```basic
+PRINT "Angle", "Sin", "Cos", "Tan"
+
+FOR ANGLE = 0 TO 90 STEP 15
+    RAD = ANGLE * 3.14159 / 180
+    S = SIN(RAD)
+    C = COS(RAD)
+    T = TAN(RAD)
+    PRINT ANGLE, S, C, T
+NEXT ANGLE
+END
+```
+
+### Temperature Converter
+
+```basic
+START: INPUT "Celsius:", C
+       F = C * 9 / 5 + 32
+       K = C + 273.15
+       
+       PRINT "Fahrenheit:", F
+       PRINT "Kelvin:", K
+       
+       INPUT "Convert another? (1=yes, 0=no):", AGAIN
+       IF AGAIN = 1 THEN START
+       END
+```
+
+## Integration Example
+
+Here's a complete example showing how to embed the interpreter with custom I/O:
+
+```go
+package main
+
+import (
+    "bufio"
+    "fmt"
+    "os"
+    "strings"
+    "tinybasic"
+)
+
+func main() {
+    interp := tinybasic.New()
+    
+    // Custom input handler
+    reader := bufio.NewReader(os.Stdin)
+    interp.SetInputCallback(func() (string, error) {
+        fmt.Print("? ")
+        input, err := reader.ReadString('\n')
+        return strings.TrimSpace(input), err
+    })
+    
+    // Custom output handler
+    var output strings.Builder
+    interp.SetOutputCallback(func(s string) {
+        output.WriteString(s)
+        fmt.Print(s)
+    })
+    
+    // Load program
+    program := `
+        INPUT "Enter your name:", NAME$
+        PRINT "Hello,", NAME$
+    `
+    
+    if err := interp.LoadProgram(program); err != nil {
+        fmt.Println("Load error:", err)
+        return
+    }
+    
+    // Run program
+    if err := interp.Run(); err != nil {
+        fmt.Println("Runtime error:", err)
+        return
+    }
+    
+    // Access program state
+    fmt.Println("\nProgram completed.")
+    fmt.Println("Variables:", interp.GetAllVariables())
+}
+```
+
+## Step-by-Step Debugging
+
+```go
+interp := tinybasic.New()
+interp.LoadProgram(source)
+
+// Execute one statement at a time
+for !interp.IsDone() {
+    fmt.Printf("Line %d: ", interp.GetCurrentLine())
+    if err := interp.Step(); err != nil {
+        fmt.Println("Error:", err)
+        break
+    }
+    
+    // Inspect variables after each step
+    vars := interp.GetAllVariables()
+    fmt.Println("Variables:", vars)
+}
+```
+
+## Language Notes
+
+- **Case Insensitive**: Commands and function names are case-insensitive
+- **No Line Numbers**: Uses labels instead of traditional line numbers
+- **Whitespace**: Extra whitespace is generally ignored
+- **String Literals**: Must be enclosed in double quotes
+- **Comments**: Use REM at the start of a line
+
+## Limitations
+
+- String variables are not yet supported (planned for future release)
+- Arrays are not supported
+- File I/O is not supported
+- No string manipulation functions
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Code of Conduct
+
+This project follows a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+
+## License
+
+This project is licensed under the BSD 3-Clause License - see the [LICENSE](LICENSE) file for details.
+
+## Author
+
+**William Jones**
+
+See [CONTRIBUTORS.md](CONTRIBUTORS.md) for a list of contributors.
+
+## Acknowledgments
+
+- Built with Go's powerful standard library
