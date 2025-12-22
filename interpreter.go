@@ -141,6 +141,25 @@ func (interp *Interpreter) parseLine(line string) (Statement, error) {
 		stmt.Args = tokens
 	}
 
+	// Check if this is an implicit LET (variable = expression)
+	// If the command looks like a variable name and is followed by =, treat as LET
+	if stmt.Command != "" && stmt.Command != "LET" && isValidLabel(stmt.Command) {
+		// Check if there's an = sign in the args
+		hasEquals := false
+		for _, tok := range stmt.Args {
+			if tok.Type == TokenOperator && tok.Value == "=" {
+				hasEquals = true
+				break
+			}
+		}
+		if hasEquals {
+			// This is an implicit LET - prepend the variable name to args
+			varToken := Token{Type: TokenIdentifier, Value: stmt.Command}
+			stmt.Args = append([]Token{varToken}, stmt.Args...)
+			stmt.Command = "LET"
+		}
+	}
+
 	return stmt, nil
 }
 
