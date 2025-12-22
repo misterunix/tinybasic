@@ -2,6 +2,11 @@
 
 A label-based BASIC interpreter written in Go with floating-point support and extensive math functions. Designed as a module for embedding in other Go programs.
 
+## Status
+
+Not fully tested yet.
+
+
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.20+-00ADD8?logo=go)](https://go.dev/)
 
