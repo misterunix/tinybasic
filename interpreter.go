@@ -21,6 +21,7 @@ type Interpreter struct {
 	dataValues     []string
 	dataPointer    int
 	forLoops       map[string]*ForLoopState
+	ioPorts        map[uint]int64 // IO ports for IN/OUT functions
 }
 
 // ForLoopState tracks FOR loop state
@@ -67,6 +68,7 @@ func New() *Interpreter {
 		currentStmt: 0,
 		done:        false,
 		forLoops:    make(map[string]*ForLoopState),
+		ioPorts:     make(map[uint]int64),
 		outputCallback: func(s string) {
 			fmt.Print(s)
 		},
@@ -291,7 +293,7 @@ func tokenize(input string) ([]Token, error) {
 func isMathFunction(name string) bool {
 	functions := []string{"SIN", "COS", "TAN", "ASIN", "ACOS", "ATAN",
 		"LOG", "LN", "EXP", "SQRT", "ABS", "INT", "RND", "SGN",
-		"FLOOR", "CEIL", "ROUND", "POW", "MIN", "MAX"}
+		"FLOOR", "CEIL", "ROUND", "POW", "MIN", "MAX", "IN", "OUT"}
 	for _, f := range functions {
 		if name == f {
 			return true
@@ -879,7 +881,7 @@ func (interp *Interpreter) evaluatePostfix(tokens []Token) (float64, error) {
 			// Handle functions with different arities
 			var result float64
 			switch tok.Value {
-			case "MIN", "MAX", "POW":
+			case "MIN", "MAX", "POW", "OUT":
 				if len(stack) < 2 {
 					return 0, fmt.Errorf("%s requires 2 arguments", tok.Value)
 				}
@@ -894,6 +896,12 @@ func (interp *Interpreter) evaluatePostfix(tokens []Token) (float64, error) {
 					result = math.Max(a, b)
 				case "POW":
 					result = math.Pow(a, b)
+				case "OUT":
+					// OUT(port, value) - write value to port
+					port := uint(a)
+					value := int64(b)
+					interp.ioPorts[port] = value
+					result = float64(value)
 				}
 			default:
 				// Single argument functions
@@ -942,6 +950,15 @@ func (interp *Interpreter) evaluatePostfix(tokens []Token) (float64, error) {
 					result = math.Ceil(arg)
 				case "ROUND":
 					result = math.Round(arg)
+				case "IN":
+					// IN(port) - read value from port
+					port := uint(arg)
+					value, exists := interp.ioPorts[port]
+					if exists {
+						result = float64(value)
+					} else {
+						result = 0
+					}
 				default:
 					return 0, fmt.Errorf("unknown function: %s", tok.Value)
 				}

@@ -189,6 +189,12 @@ LOOP:  PRINT X
 - `MIN(x, y)` - Minimum of two values
 - `MAX(x, y)` - Maximum of two values
 
+#### I/O Functions
+- `IN(port)` - Read a signed integer value from the specified port (returns 0 if port is uninitialized)
+- `OUT(port, value)` - Write a signed integer value to the specified port and return the value
+  - Port: unsigned integer (0 to max uint)
+  - Value: signed integer
+
 ### Statements
 
 #### PRINT - Output
@@ -347,6 +353,48 @@ START: INPUT "Celsius:", C
        INPUT "Convert another? (1=yes, 0=no):", AGAIN
        IF AGAIN = 1 THEN START
        END
+```
+
+### Port I/O Operations
+
+```basic
+REM Demonstrate IN and OUT port I/O functions
+
+REM Write values to various ports
+RESULT = OUT(100, 42)
+PRINT "Wrote 42 to port 100, returned:", RESULT
+
+RESULT = OUT(101, -255)
+PRINT "Wrote -255 to port 101"
+
+RESULT = OUT(102, 1000)
+PRINT "Wrote 1000 to port 102"
+
+REM Read values back from ports
+VAL1 = IN(100)
+VAL2 = IN(101)
+VAL3 = IN(102)
+
+PRINT "Read from port 100:", VAL1
+PRINT "Read from port 101:", VAL2
+PRINT "Read from port 102:", VAL3
+
+REM Reading from uninitialized port returns 0
+VAL4 = IN(999)
+PRINT "Read from port 999:", VAL4
+
+REM Use ports for data exchange
+FOR I = 0 TO 9
+    DUMMY = OUT(200 + I, I * I)
+NEXT I
+
+PRINT "Squares stored in ports 200-209:"
+FOR I = 0 TO 9
+    VALUE = IN(200 + I)
+    PRINT "Port", 200 + I, "=", VALUE
+NEXT I
+
+END
 ```
 
 ## Integration Example
