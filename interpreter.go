@@ -8,6 +8,8 @@ import (
 	"unicode"
 )
 
+const Version = "0.0.1-alpha"
+
 // Interpreter represents a BASIC interpreter instance
 type Interpreter struct {
 	program        []Statement

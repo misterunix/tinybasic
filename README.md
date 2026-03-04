@@ -1,4 +1,4 @@
-# TinyBASIC
+# TinyBASIC 0.0.1-alpha
 
 A label-based BASIC interpreter written in Go with floating-point support and extensive math functions. Designed as a module for embedding in other Go programs.
 
