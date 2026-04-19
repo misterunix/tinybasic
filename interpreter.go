@@ -8,7 +8,7 @@ import (
 	"unicode"
 )
 
-const Version = "0.0.1-alpha"
+const Version = "0.0.6"
 
 // Interpreter represents a BASIC interpreter instance
 type Interpreter struct {
