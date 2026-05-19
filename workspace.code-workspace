@@ -8,6 +8,6 @@
 
     "go.installDependenciesWhenBuilding":true,
     "editor.renderWhitespace": "trailing",
-    "comments.openPanel": "neverOpen"
+    "comments.openView": "never"
   }
 }

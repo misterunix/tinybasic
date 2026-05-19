@@ -8,7 +8,7 @@ import (
 	"unicode"
 )
 
-const Version = "0.0.6"
+const Version = "0.0.7"
 
 // Interpreter represents a BASIC interpreter instance
 type Interpreter struct {
@@ -147,7 +147,13 @@ func (interp *Interpreter) parseLine(line string) (Statement, error) {
 
 	// Check if this is an implicit LET (variable = expression)
 	// If the command looks like a variable name and is followed by =, treat as LET
-	if stmt.Command != "" && stmt.Command != "LET" && isValidLabel(stmt.Command) {
+	basicKeywords := map[string]bool{
+		"LET": true, "PRINT": true, "INPUT": true, "IF": true, "THEN": true,
+		"GOTO": true, "GOSUB": true, "RETURN": true, "FOR": true, "NEXT": true,
+		"TO": true, "STEP": true, "DATA": true, "READ": true, "END": true,
+		"REM": true,
+	}
+	if stmt.Command != "" && !basicKeywords[stmt.Command] && isValidLabel(stmt.Command) {
 		// Check if there's an = sign in the args
 		hasEquals := false
 		for _, tok := range stmt.Args {
