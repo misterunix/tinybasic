@@ -3,6 +3,7 @@ package tinybasic
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"strconv"
 	"strings"
 	"unicode"
@@ -943,7 +944,8 @@ func (interp *Interpreter) evaluatePostfix(tokens []Token) (float64, error) {
 					result = float64(int64(arg))
 				case "RND":
 					// Simple random - could be improved
-					result = math.Mod(math.Abs(arg)*9301+49297, 233280) / 233280
+					result = rand.Float64() * math.Abs(arg)
+					//result = math.Mod(math.Abs(arg)*9301+49297, 233280) / 233280
 				case "SGN":
 					if arg > 0 {
 						result = 1
