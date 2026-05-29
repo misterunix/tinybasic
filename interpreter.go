@@ -9,7 +9,7 @@ import (
 	"unicode"
 )
 
-const Version = "0.0.8"
+const Version = "0.0.9"
 
 // Interpreter represents a BASIC interpreter instance
 type Interpreter struct {
@@ -191,6 +191,11 @@ func isValidLabel(s string) bool {
 		}
 	}
 	return true
+}
+
+// normalizeVariableName makes variable access case-insensitive.
+func normalizeVariableName(name string) string {
+	return strings.ToUpper(name)
 }
 
 // tokenize breaks a string into tokens
@@ -385,7 +390,7 @@ func (interp *Interpreter) executeLet(stmt Statement) error {
 		return fmt.Errorf("LET requires a variable name")
 	}
 
-	varName := stmt.Args[0].Value
+	varName := normalizeVariableName(stmt.Args[0].Value)
 
 	// Find the equals sign
 	eqIdx := -1
@@ -471,7 +476,7 @@ func (interp *Interpreter) executeInput(stmt Statement) error {
 		return fmt.Errorf("INPUT requires a variable name")
 	}
 
-	varName := stmt.Args[varIdx].Value
+	varName := normalizeVariableName(stmt.Args[varIdx].Value)
 
 	if interp.inputCallback == nil {
 		return fmt.Errorf("no input callback set")
@@ -581,7 +586,7 @@ func (interp *Interpreter) executeFor(stmt Statement) error {
 		return fmt.Errorf("FOR requires variable = start TO end")
 	}
 
-	varName := stmt.Args[0].Value
+	varName := normalizeVariableName(stmt.Args[0].Value)
 
 	// Find = sign
 	eqIdx := -1
@@ -661,7 +666,7 @@ func (interp *Interpreter) executeNext(stmt Statement) error {
 		return fmt.Errorf("NEXT requires a variable name")
 	}
 
-	varName := stmt.Args[0].Value
+	varName := normalizeVariableName(stmt.Args[0].Value)
 	loop, ok := interp.forLoops[varName]
 	if !ok {
 		return fmt.Errorf("NEXT without FOR: %s", varName)
@@ -848,7 +853,7 @@ func (interp *Interpreter) evaluatePostfix(tokens []Token) (float64, error) {
 
 		case TokenIdentifier:
 			// Variable lookup
-			val, ok := interp.variables[tok.Value]
+			val, ok := interp.variables[normalizeVariableName(tok.Value)]
 			if !ok {
 				return 0, fmt.Errorf("undefined variable: %s", tok.Value)
 			}
@@ -1042,13 +1047,13 @@ func (interp *Interpreter) IsDone() bool {
 
 // GetVariable returns the value of a variable
 func (interp *Interpreter) GetVariable(name string) (float64, bool) {
-	val, ok := interp.variables[name]
+	val, ok := interp.variables[normalizeVariableName(name)]
 	return val, ok
 }
 
 // SetVariable sets the value of a variable
 func (interp *Interpreter) SetVariable(name string, value float64) {
-	interp.variables[name] = value
+	interp.variables[normalizeVariableName(name)] = value
 }
 
 // GetAllVariables returns a copy of all variables

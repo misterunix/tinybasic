@@ -281,6 +281,37 @@ END`
 	}
 }
 
+func TestVariablesAreCaseInsensitive(t *testing.T) {
+	interp, buf := newTestInterp()
+	inputs := []string{"9"}
+	idx := 0
+	interp.SetInputCallback(func() (string, error) {
+		s := inputs[idx]
+		idx++
+		return s, nil
+	})
+	src := `let x = 3
+PRINT X
+INPUT y
+PRINT Y
+END`
+	if err := interp.LoadProgram(src); err != nil {
+		t.Fatalf("load error: %v", err)
+	}
+	if err := interp.Run(); err != nil {
+		t.Fatalf("run error: %v", err)
+	}
+	if got := buf.String(); got != "3\n9\n" {
+		t.Errorf("expected %q, got %q", "3\n9\n", got)
+	}
+	if val, ok := interp.GetVariable("x"); !ok || val != 3 {
+		t.Errorf("expected x to be 3, got %v, %v", val, ok)
+	}
+	if val, ok := interp.GetVariable("Y"); !ok || val != 9 {
+		t.Errorf("expected Y to be 9, got %v, %v", val, ok)
+	}
+}
+
 func TestReset(t *testing.T) {
 	interp, _ := newTestInterp()
 	interp.variables["X"] = 99
