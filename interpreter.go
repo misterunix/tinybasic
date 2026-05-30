@@ -349,7 +349,7 @@ func tokenize(input string) ([]Token, error) {
 // isMathFunction checks if a name is a math function
 func isMathFunction(name string) bool {
 	functions := []string{"SIN", "COS", "TAN", "ASIN", "ACOS", "ATAN",
-		"LOG", "LN", "EXP", "SQRT", "ABS", "INT", "RND", "SGN",
+		"ATAN2", "LOG", "LN", "EXP", "SQRT", "ABS", "INT", "RND", "SGN",
 		"FLOOR", "CEIL", "ROUND", "POW", "MIN", "MAX", "IN", "OUT"}
 	for _, f := range functions {
 		if name == f {
@@ -973,7 +973,7 @@ func (interp *Interpreter) evaluatePostfix(tokens []Token) (float64, error) {
 			// Handle functions with different arities
 			var result float64
 			switch tok.Value {
-			case "MIN", "MAX", "POW", "OUT":
+			case "MIN", "MAX", "POW", "OUT", "ATAN2":
 				if len(stack) < 2 {
 					return 0, fmt.Errorf("%s requires 2 arguments", tok.Value)
 				}
@@ -988,6 +988,8 @@ func (interp *Interpreter) evaluatePostfix(tokens []Token) (float64, error) {
 					result = math.Max(a, b)
 				case "POW":
 					result = math.Pow(a, b)
+				case "ATAN2":
+					result = math.Atan2(a, b)
 				case "OUT":
 					// OUT(port, value) - write value to port
 					port := uint(a)

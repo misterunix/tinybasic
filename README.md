@@ -192,6 +192,7 @@ LOOP:  PRINT X
 - `ASIN(x)` - Arcsine
 - `ACOS(x)` - Arccosine
 - `ATAN(x)` - Arctangent
+- `ATAN2(y, x)` - Two-argument arctangent using quadrant-aware angle calculation
 
 #### Logarithmic and Exponential
 

@@ -131,6 +131,34 @@ func TestArithmetic(t *testing.T) {
 	}
 }
 
+func TestAtan2Function(t *testing.T) {
+	interp, buf := newTestInterp()
+	src := `X = ATAN2(0, 0-1)
+PRINT X
+END`
+	if err := interp.LoadProgram(src); err != nil {
+		t.Fatalf("load error: %v", err)
+	}
+	if err := interp.Run(); err != nil {
+		t.Fatalf("run error: %v", err)
+	}
+	if got := buf.String(); got != "3.141592653589793\n" {
+		t.Fatalf("expected %q, got %q", "3.141592653589793\n", got)
+	}
+}
+
+func TestAtan2RequiresTwoArguments(t *testing.T) {
+	interp, _ := newTestInterp()
+	src := `PRINT ATAN2(1)
+END`
+	if err := interp.LoadProgram(src); err != nil {
+		t.Fatalf("load error: %v", err)
+	}
+	if err := interp.Run(); err == nil {
+		t.Fatal("expected error for ATAN2 with one argument, got nil")
+	}
+}
+
 func TestGotoLabel(t *testing.T) {
 	interp, buf := newTestInterp()
 	src := `GOTO SKIP
