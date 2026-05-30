@@ -223,6 +223,16 @@ LOOP:  PRINT X
   - Port: unsigned integer (0 to max uint)
     - Value: floating-point number
 
+Examples:
+
+```basic
+VALUE = IN(100)
+PRINT "Port 100:", VALUE
+
+RESULT = OUT(100, 42.5)
+PRINT "Wrote:", RESULT
+```
+
 From Go, you can seed ports with `SetPort`, inspect them with `GetPort`, override reads with `SetPortReadCallback`, and observe writes with `SetPortWriteCallback`.
 
 ### Statements
@@ -241,6 +251,50 @@ PRINT X, Y, Z
 INPUT X
 INPUT "Enter a number:", Y
 ```
+
+#### OUT - Write To Parent Port Interface
+
+```basic
+OUT 100, 42.5
+OUT 7, X + 1
+```
+
+Use `OUT port, value` to send values from the running BASIC program to the parent Go program.
+
+- `port`: expression converted to unsigned integer (`uint`)
+- `value`: numeric expression to write
+- Effect: stores the value in the interpreter's port map and invokes `SetPortWriteCallback` if configured
+
+Statement example:
+
+```basic
+LET TEMP = 73.25
+OUT 1, TEMP
+OUT 2, TEMP * 1.8 + 32
+```
+
+Go integration example:
+
+```go
+interp := tinybasic.New()
+
+interp.SetPortWriteCallback(func(port uint, value float64) {
+    fmt.Printf("BASIC OUT -> port %d = %g\n", port, value)
+})
+
+program := `
+    X = 10
+    OUT 5, X * 2
+    END
+`
+
+_ = interp.LoadProgram(program)
+_ = interp.Run()
+```
+
+`OUT(port, value)` is also available as an expression function when you want the written value returned inside another expression.
+
+`IN(port)` is available as an expression function and can be used anywhere numeric expressions are accepted.
 
 #### IF...THEN - Conditional
 

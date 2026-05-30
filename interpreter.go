@@ -9,7 +9,7 @@ import (
 	"unicode"
 )
 
-const Version = "0.0.9"
+const Version = "0.0.10"
 
 // Interpreter represents a BASIC interpreter instance
 type Interpreter struct {
@@ -195,7 +195,7 @@ func (interp *Interpreter) parseLine(line string) (Statement, error) {
 		"LET": true, "PRINT": true, "INPUT": true, "IF": true, "THEN": true,
 		"GOTO": true, "GOSUB": true, "RETURN": true, "FOR": true, "NEXT": true,
 		"TO": true, "STEP": true, "DATA": true, "READ": true, "END": true,
-		"REM": true,
+		"REM": true, "OUT": true,
 	}
 	if stmt.Command != "" && !basicKeywords[stmt.Command] && isValidLabel(stmt.Command) {
 		// Check if there's an = sign in the args
@@ -412,6 +412,8 @@ func (interp *Interpreter) Step() error {
 		return interp.executeData(stmt)
 	case "READ":
 		return interp.executeRead(stmt)
+	case "OUT":
+		return interp.executeOut(stmt)
 	case "END":
 		interp.done = true
 		return nil
@@ -776,6 +778,39 @@ func (interp *Interpreter) executeRead(stmt Statement) error {
 		interp.dataPointer++
 	}
 
+	interp.currentStmt++
+	return nil
+}
+
+// executeOut handles OUT port, value
+func (interp *Interpreter) executeOut(stmt Statement) error {
+	if len(stmt.Args) == 0 {
+		return fmt.Errorf("OUT requires port, value")
+	}
+
+	commaIdx := -1
+	for i, tok := range stmt.Args {
+		if tok.Type == TokenComma {
+			commaIdx = i
+			break
+		}
+	}
+
+	if commaIdx <= 0 || commaIdx >= len(stmt.Args)-1 {
+		return fmt.Errorf("OUT requires port, value")
+	}
+
+	portValue, err := interp.evaluateExpression(stmt.Args[:commaIdx])
+	if err != nil {
+		return err
+	}
+
+	value, err := interp.evaluateExpression(stmt.Args[commaIdx+1:])
+	if err != nil {
+		return err
+	}
+
+	interp.writePort(uint(portValue), value)
 	interp.currentStmt++
 	return nil
 }

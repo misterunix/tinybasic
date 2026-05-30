@@ -372,6 +372,101 @@ END`
 	}
 }
 
+func TestOutStatement(t *testing.T) {
+	interp, _ := newTestInterp()
+	var wrotePort uint
+	var wroteValue float64
+
+	interp.SetPortWriteCallback(func(port uint, value float64) {
+		wrotePort = port
+		wroteValue = value
+	})
+
+	src := `OUT 12, 34.5
+END`
+	if err := interp.LoadProgram(src); err != nil {
+		t.Fatalf("load error: %v", err)
+	}
+	if err := interp.Run(); err != nil {
+		t.Fatalf("run error: %v", err)
+	}
+
+	if wrotePort != 12 || wroteValue != 34.5 {
+		t.Fatalf("expected write callback to capture port 12 value 34.5, got port %d value %g", wrotePort, wroteValue)
+	}
+	if value, ok := interp.GetPort(12); !ok || value != 34.5 {
+		t.Fatalf("expected port 12 to store 34.5, got %g, %v", value, ok)
+	}
+}
+
+func TestOutStatementRequiresPortAndValue(t *testing.T) {
+	interp, _ := newTestInterp()
+	src := `OUT 1
+END`
+	if err := interp.LoadProgram(src); err != nil {
+		t.Fatalf("load error: %v", err)
+	}
+	if err := interp.Run(); err == nil {
+		t.Fatal("expected error for OUT without value, got nil")
+	}
+}
+
+func TestInFunction(t *testing.T) {
+	interp, buf := newTestInterp()
+	interp.SetPort(3, 88.25)
+
+	src := `VALUE = IN(3)
+PRINT VALUE
+END`
+	if err := interp.LoadProgram(src); err != nil {
+		t.Fatalf("load error: %v", err)
+	}
+	if err := interp.Run(); err != nil {
+		t.Fatalf("run error: %v", err)
+	}
+
+	if got := buf.String(); got != "88.25\n" {
+		t.Fatalf("expected %q, got %q", "88.25\n", got)
+	}
+}
+
+func TestInFunctionUsesReadCallback(t *testing.T) {
+	interp, buf := newTestInterp()
+	interp.SetPort(3, 10)
+	interp.SetPortReadCallback(func(port uint) (float64, bool) {
+		if port == 3 {
+			return 44.5, true
+		}
+		return 0, false
+	})
+
+	src := `VALUE = IN(3)
+PRINT VALUE
+END`
+	if err := interp.LoadProgram(src); err != nil {
+		t.Fatalf("load error: %v", err)
+	}
+	if err := interp.Run(); err != nil {
+		t.Fatalf("run error: %v", err)
+	}
+
+	if got := buf.String(); got != "44.5\n" {
+		t.Fatalf("expected %q, got %q", "44.5\n", got)
+	}
+}
+
+func TestInFunctionStatementFormIsUnknownCommand(t *testing.T) {
+	interp, _ := newTestInterp()
+	src := `IN 1
+END`
+	if err := interp.LoadProgram(src); err != nil {
+		t.Fatalf("load error: %v", err)
+	}
+	if err := interp.Run(); err == nil {
+		t.Fatal("expected error for IN statement form, got nil")
+	}
+}
+
 func TestReset(t *testing.T) {
 	interp, _ := newTestInterp()
 	interp.variables["X"] = 99
