@@ -13,18 +13,20 @@ const Version = "0.0.9"
 
 // Interpreter represents a BASIC interpreter instance
 type Interpreter struct {
-	program        []Statement
-	variables      map[string]float64
-	labels         map[string]int // label name to statement index
-	currentStmt    int
-	callStack      []int // for GOSUB/RETURN
-	done           bool
-	inputCallback  func() (string, error)
-	outputCallback func(string)
-	dataValues     []string
-	dataPointer    int
-	forLoops       map[string]*ForLoopState
-	ioPorts        map[uint]int64 // IO ports for IN/OUT functions
+	program           []Statement
+	variables         map[string]float64
+	labels            map[string]int // label name to statement index
+	currentStmt       int
+	callStack         []int // for GOSUB/RETURN
+	done              bool
+	inputCallback     func() (string, error)
+	outputCallback    func(string)
+	dataValues        []string
+	dataPointer       int
+	forLoops          map[string]*ForLoopState
+	ioPorts           map[uint]float64 // IO ports for IN/OUT functions
+	portReadCallback  func(uint) (float64, bool)
+	portWriteCallback func(uint, float64)
 }
 
 // ForLoopState tracks FOR loop state
@@ -71,7 +73,7 @@ func New() *Interpreter {
 		currentStmt: 0,
 		done:        false,
 		forLoops:    make(map[string]*ForLoopState),
-		ioPorts:     make(map[uint]int64),
+		ioPorts:     make(map[uint]float64),
 		outputCallback: func(s string) {
 			fmt.Print(s)
 		},
@@ -86,6 +88,47 @@ func (interp *Interpreter) SetInputCallback(callback func() (string, error)) {
 // SetOutputCallback sets the callback for PRINT statements
 func (interp *Interpreter) SetOutputCallback(callback func(string)) {
 	interp.outputCallback = callback
+}
+
+// SetPortReadCallback sets the callback for IN(port) lookups.
+// If the callback returns ok=false, the interpreter falls back to its internal port map.
+func (interp *Interpreter) SetPortReadCallback(callback func(uint) (float64, bool)) {
+	interp.portReadCallback = callback
+}
+
+// SetPortWriteCallback sets the callback for OUT(port, value) writes.
+func (interp *Interpreter) SetPortWriteCallback(callback func(uint, float64)) {
+	interp.portWriteCallback = callback
+}
+
+// SetPort seeds or updates a port value from the parent Go program.
+func (interp *Interpreter) SetPort(port uint, value float64) {
+	interp.ioPorts[port] = value
+}
+
+// GetPort returns the current stored value for a port.
+func (interp *Interpreter) GetPort(port uint) (float64, bool) {
+	value, ok := interp.ioPorts[port]
+	return value, ok
+}
+
+func (interp *Interpreter) readPort(port uint) (float64, bool) {
+	if interp.portReadCallback != nil {
+		if value, ok := interp.portReadCallback(port); ok {
+			return value, true
+		}
+	}
+
+	value, ok := interp.ioPorts[port]
+	return value, ok
+}
+
+func (interp *Interpreter) writePort(port uint, value float64) float64 {
+	interp.ioPorts[port] = value
+	if interp.portWriteCallback != nil {
+		interp.portWriteCallback(port, value)
+	}
+	return value
 }
 
 // LoadProgram loads a program from source code
@@ -913,9 +956,7 @@ func (interp *Interpreter) evaluatePostfix(tokens []Token) (float64, error) {
 				case "OUT":
 					// OUT(port, value) - write value to port
 					port := uint(a)
-					value := int64(b)
-					interp.ioPorts[port] = value
-					result = float64(value)
+					result = interp.writePort(port, b)
 				}
 			default:
 				// Single argument functions
@@ -968,7 +1009,7 @@ func (interp *Interpreter) evaluatePostfix(tokens []Token) (float64, error) {
 				case "IN":
 					// IN(port) - read value from port
 					port := uint(arg)
-					value, exists := interp.ioPorts[port]
+					value, exists := interp.readPort(port)
 					if exists {
 						result = float64(value)
 					} else {

@@ -312,6 +312,66 @@ END`
 	}
 }
 
+func TestPortAccessors(t *testing.T) {
+	interp, buf := newTestInterp()
+	interp.SetPort(7, 1234.5)
+
+	if value, ok := interp.GetPort(7); !ok || value != 1234.5 {
+		t.Fatalf("expected seeded port value 1234.5, got %g, %v", value, ok)
+	}
+
+	src := `PRINT IN(7)
+END`
+	if err := interp.LoadProgram(src); err != nil {
+		t.Fatalf("load error: %v", err)
+	}
+	if err := interp.Run(); err != nil {
+		t.Fatalf("run error: %v", err)
+	}
+	if got := buf.String(); got != "1234.5\n" {
+		t.Fatalf("expected %q, got %q", "1234.5\n", got)
+	}
+}
+
+func TestPortCallbacks(t *testing.T) {
+	interp, buf := newTestInterp()
+	var wrotePort uint
+	var wroteValue float64
+
+	interp.SetPort(5, 11.25)
+	interp.SetPortReadCallback(func(port uint) (float64, bool) {
+		if port == 5 {
+			return 99.75, true
+		}
+		return 0, false
+	})
+	interp.SetPortWriteCallback(func(port uint, value float64) {
+		wrotePort = port
+		wroteValue = value
+	})
+
+	src := `PRINT IN(5)
+RESULT = OUT(9, 77.5)
+PRINT RESULT
+END`
+	if err := interp.LoadProgram(src); err != nil {
+		t.Fatalf("load error: %v", err)
+	}
+	if err := interp.Run(); err != nil {
+		t.Fatalf("run error: %v", err)
+	}
+
+	if got := buf.String(); got != "99.75\n77.5\n" {
+		t.Fatalf("expected %q, got %q", "99.75\n77.5\n", got)
+	}
+	if wrotePort != 9 || wroteValue != 77.5 {
+		t.Fatalf("expected write callback to capture port 9 value 77.5, got port %d value %g", wrotePort, wroteValue)
+	}
+	if value, ok := interp.GetPort(9); !ok || value != 77.5 {
+		t.Fatalf("expected port 9 to store 77.5, got %g, %v", value, ok)
+	}
+}
+
 func TestReset(t *testing.T) {
 	interp, _ := newTestInterp()
 	interp.variables["X"] = 99

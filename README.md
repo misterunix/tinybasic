@@ -6,7 +6,6 @@ A label-based BASIC interpreter written in Go with floating-point support and ex
 
 Not fully tested yet.
 
-
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.20+-00ADD8?logo=go)](https://go.dev/)
 
@@ -114,6 +113,16 @@ line := interp.GetCurrentLine()
 size := interp.GetProgramSize()
 ```
 
+### Port Access
+
+```go
+// Seed a port value that BASIC can read with IN(port)
+interp.SetPort(100, 42.5)
+
+// Read the last stored value for a port
+value, exists := interp.GetPort(100)
+```
+
 ### Custom I/O Callbacks
 
 ```go
@@ -127,6 +136,20 @@ interp.SetInputCallback(func() (string, error) {
 // Set output callback
 interp.SetOutputCallback(func(s string) {
     fmt.Print(s)
+})
+
+// Override IN(port) reads from the parent Go program.
+// Return ok=false to fall back to the interpreter's stored port map.
+interp.SetPortReadCallback(func(port uint) (float64, bool) {
+    if port == 7 {
+        return 1234.5, true
+    }
+    return 0, false
+})
+
+// Observe or mirror OUT(port, value) writes.
+interp.SetPortWriteCallback(func(port uint, value float64) {
+    fmt.Printf("port %d <- %g\n", port, value)
 })
 ```
 
@@ -162,6 +185,7 @@ LOOP:  PRINT X
 ### Math Functions
 
 #### Trigonometric Functions
+
 - `SIN(x)` - Sine
 - `COS(x)` - Cosine
 - `TAN(x)` - Tangent
@@ -170,12 +194,14 @@ LOOP:  PRINT X
 - `ATAN(x)` - Arctangent
 
 #### Logarithmic and Exponential
+
 - `LOG(x)` - Base-10 logarithm
 - `LN(x)` - Natural logarithm
 - `EXP(x)` - e^x
 - `SQRT(x)` - Square root
 
 #### Utility Functions
+
 - `ABS(x)` - Absolute value
 - `INT(x)` - Convert to integer (truncate)
 - `FLOOR(x)` - Floor function
@@ -185,15 +211,19 @@ LOOP:  PRINT X
 - `RND(x)` - Pseudo-random number
 
 #### Multi-argument Functions
+
 - `POW(x, y)` - x to the power of y
 - `MIN(x, y)` - Minimum of two values
 - `MAX(x, y)` - Maximum of two values
 
 #### I/O Functions
-- `IN(port)` - Read a signed integer value from the specified port (returns 0 if port is uninitialized)
-- `OUT(port, value)` - Write a signed integer value to the specified port and return the value
+
+- `IN(port)` - Read a floating-point value from the specified port (returns 0 if port is uninitialized)
+- `OUT(port, value)` - Write a floating-point value to the specified port and return the value
   - Port: unsigned integer (0 to max uint)
-  - Value: signed integer
+    - Value: floating-point number
+
+From Go, you can seed ports with `SetPort`, inspect them with `GetPort`, override reads with `SetPortReadCallback`, and observe writes with `SetPortWriteCallback`.
 
 ### Statements
 
@@ -361,14 +391,14 @@ START: INPUT "Celsius:", C
 REM Demonstrate IN and OUT port I/O functions
 
 REM Write values to various ports
-RESULT = OUT(100, 42)
-PRINT "Wrote 42 to port 100, returned:", RESULT
+RESULT = OUT(100, 42.5)
+PRINT "Wrote 42.5 to port 100, returned:", RESULT
 
-RESULT = OUT(101, -255)
-PRINT "Wrote -255 to port 101"
+RESULT = OUT(101, -255.5)
+PRINT "Wrote -255.5 to port 101"
 
-RESULT = OUT(102, 1000)
-PRINT "Wrote 1000 to port 102"
+RESULT = OUT(102, 1000.25)
+PRINT "Wrote 1000.25 to port 102"
 
 REM Read values back from ports
 VAL1 = IN(100)
@@ -395,6 +425,111 @@ FOR I = 0 TO 9
 NEXT I
 
 END
+```
+
+### Go Example for Port I/O
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/misterunix/tinybasic"
+)
+
+func main() {
+    interp := tinybasic.New()
+
+    program := `
+RESULT = OUT(100, 42.5)
+PRINT "OUT returned:", RESULT
+
+VALUE = IN(100)
+PRINT "IN read:", VALUE
+
+MISSING = IN(999)
+PRINT "Uninitialized port:", MISSING
+END
+`
+
+    if err := interp.LoadProgram(program); err != nil {
+        fmt.Println("Load error:", err)
+        return
+    }
+
+    if err := interp.Run(); err != nil {
+        fmt.Println("Runtime error:", err)
+        return
+    }
+}
+```
+
+Expected output:
+
+```text
+OUT returned: 42.5
+IN read: 42.5
+Uninitialized port: 0
+```
+
+### Go Example with Parent-Supplied Port Values
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/misterunix/tinybasic"
+)
+
+func main() {
+    interp := tinybasic.New()
+
+    interp.SetPort(7, 1234.5)
+    interp.SetPortReadCallback(func(port uint) (float64, bool) {
+        if port == 8 {
+            return 5678.25, true
+        }
+        return 0, false
+    })
+    interp.SetPortWriteCallback(func(port uint, value float64) {
+        fmt.Printf("BASIC wrote port %d = %g\n", port, value)
+    })
+
+    program := `
+PRINT IN(7)
+PRINT IN(8)
+RESULT = OUT(9, 4321.75)
+PRINT RESULT
+END
+`
+
+    if err := interp.LoadProgram(program); err != nil {
+        fmt.Println("Load error:", err)
+        return
+    }
+
+    if err := interp.Run(); err != nil {
+        fmt.Println("Runtime error:", err)
+        return
+    }
+
+    if value, ok := interp.GetPort(9); ok {
+        fmt.Println("Stored port 9:", value)
+    }
+}
+```
+
+Expected output:
+
+```text
+1234.5
+5678.25
+BASIC wrote port 9 = 4321.75
+4321.75
+Stored port 9: 4321.75
 ```
 
 ## Integration Example
